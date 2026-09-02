@@ -1,0 +1,348 @@
+flowchart LR
+    %% Node definitions with styling
+    title("fa:fa-project-diagram Python Method Visualization"):::title
+    subgraph mod0["fa:fa-cube api_client"]
+        direction TB
+        subgraph cls0_0["fa:fa-code SdlicitClient"]
+            direction TB
+                node0["fa:fa-play-circle __init__"]:::constructor
+                node1["fa:fa-lock server_url"]:::property
+                node2["fa:fa-code-branch health"]:::method
+                node3["fa:fa-code-branch init_project"]:::method
+                node4["fa:fa-code-branch get_config"]:::method
+                node5["fa:fa-code-branch start_session"]:::method
+                node6["fa:fa-code-branch end_session"]:::method
+                node7["fa:fa-code-branch create_sow"]:::method
+                node8["fa:fa-code-branch step_event"]:::method
+                node9["fa:fa-code-branch analyse_input"]:::method
+                node10["fa:fa-code-branch expand_adr"]:::method
+                node11["fa:fa-code-branch query_kb"]:::method
+                node12["fa:fa-code-branch ingest_kb"]:::method
+                node13["fa:fa-code-branch scan_documents"]:::method
+                node14["fa:fa-code-branch kb_status"]:::method
+                node15["fa:fa-code-branch generate_personas"]:::method
+                node16["fa:fa-code-branch generate_gherkin"]:::method
+                node17["fa:fa-code-branch generate_stories"]:::method
+        end
+        subgraph func0["fa:fa-sitemap Module Functions"]
+            node18["fa:fa-code-branch __init__"]:::method
+            node19["fa:fa-star server_url"]:::decorated
+            node20["fa:fa-code-branch health"]:::method
+            node21["fa:fa-code-branch init_project"]:::method
+            node22["fa:fa-code-branch get_config"]:::method
+            node23["fa:fa-code-branch start_session"]:::method
+            node24["fa:fa-code-branch end_session"]:::method
+            node25["fa:fa-code-branch create_sow"]:::method
+            node26["fa:fa-code-branch step_event"]:::method
+            node27["fa:fa-code-branch analyse_input"]:::method
+            node28["fa:fa-code-branch expand_adr"]:::method
+            node29["fa:fa-code-branch query_kb"]:::method
+            node30["fa:fa-star ingest_kb"]:::decorated
+            node31["fa:fa-code-branch scan_documents"]:::method
+            node32["fa:fa-code-branch kb_status"]:::method
+            node33["fa:fa-code-branch generate_personas"]:::method
+            node34["fa:fa-code-branch generate_gherkin"]:::method
+            node35["fa:fa-code-branch generate_stories"]:::method
+        end
+    end
+    subgraph mod1["fa:fa-cube cli_client"]
+        direction TB
+        subgraph func1["fa:fa-sitemap Module Functions"]
+            node36["fa:fa-key _clear"]:::private
+            node37["fa:fa-key _draw_header"]:::private
+            node38["fa:fa-key _build_menu"]:::private
+            node39["fa:fa-key _draw_menu"]:::private
+            node40["fa:fa-code-branch main"]:::method
+        end
+    end
+    subgraph mod2["fa:fa-cube files"]
+        direction TB
+        subgraph func2["fa:fa-sitemap Module Functions"]
+            node41["fa:fa-code-branch sdlicit_root"]:::method
+            node42["fa:fa-code-branch adr_dir"]:::method
+            node43["fa:fa-code-branch sessions_path"]:::method
+            node44["fa:fa-code-branch list_adr_files"]:::method
+            node45["fa:fa-code-branch write_adr"]:::method
+            node46["fa:fa-code-branch read_adr"]:::method
+            node47["fa:fa-code-branch artifacts_dir"]:::method
+            node48["fa:fa-code-branch write_sow"]:::method
+        end
+    end
+    subgraph mod3["fa:fa-cube madr"]
+        direction TB
+        subgraph func3["fa:fa-sitemap Module Functions"]
+            node49["fa:fa-key _slugify"]:::private
+            node50["fa:fa-key _next_sequence"]:::private
+            node51["fa:fa-key _today"]:::private
+            node52["fa:fa-key _render_minimal"]:::private
+            node53["fa:fa-key _render_full"]:::private
+            node54["fa:fa-key _render_bare"]:::private
+            node55["fa:fa-code-branch render_madr"]:::method
+        end
+    end
+    subgraph mod4["fa:fa-cube parsers"]
+        direction TB
+        subgraph func4["fa:fa-sitemap Module Functions"]
+            node56["fa:fa-code-branch parse_madr_content"]:::method
+        end
+    end
+    subgraph mod5["fa:fa-cube __init__"]
+        direction TB
+        subgraph func5["fa:fa-sitemap Module Functions"]
+            node57["fa:fa-code-branch menu_entries"]:::method
+        end
+    end
+    subgraph mod6["fa:fa-cube create_adr"]
+        direction TB
+        subgraph cls6_0["fa:fa-code _ADRSession"]
+            direction TB
+                node58["fa:fa-play-circle __init__"]:::constructor
+                node59["fa:fa-code-branch render"]:::method
+                node60["fa:fa-code-branch set_hint"]:::method
+                node61["fa:fa-code-branch clear_hint"]:::method
+                node62["fa:fa-code-branch add_log"]:::method
+                node63["fa:fa-code-branch pop_log"]:::method
+                node64["fa:fa-code-branch fire"]:::method
+                node65["fa:fa-code-branch wait_for_latest"]:::method
+                node66["fa:fa-code-branch drain"]:::method
+                node67["fa:fa-code-branch take_pending_probe"]:::method
+                node68["fa:fa-code-branch add_clarification"]:::method
+                node69["fa:fa-code-branch replay_step_sync"]:::method
+                node70["fa:fa-key _build_left"]:::private
+                node71["fa:fa-key _build_right"]:::private
+                node72["fa:fa-key _fetch"]:::private
+        end
+        subgraph cls6_1["fa:fa-code _ChosenOptionStep"]
+            direction TB
+                node73["fa:fa-play-circle __init__"]:::constructor
+                node74["fa:fa-code-branch run"]:::method
+        end
+        subgraph cls6_2["fa:fa-code _ConseqStep"]
+            direction TB
+                node75["fa:fa-play-circle __init__"]:::constructor
+                node76["fa:fa-code-branch run"]:::method
+                node77["fa:fa-code-branch undo"]:::method
+        end
+        subgraph cls6_3["fa:fa-code _FieldStep"]
+            direction TB
+                node78["fa:fa-play-circle __init__"]:::constructor
+                node79["fa:fa-code-branch run"]:::method
+        end
+        subgraph cls6_4["fa:fa-code _FrontmatterStep"]
+            direction TB
+                node80["fa:fa-play-circle __init__"]:::constructor
+                node81["fa:fa-code-branch run"]:::method
+                node82["fa:fa-code-branch undo"]:::method
+        end
+        subgraph cls6_5["fa:fa-code _ListStep"]
+            direction TB
+                node83["fa:fa-play-circle __init__"]:::constructor
+                node84["fa:fa-code-branch run"]:::method
+        end
+        subgraph cls6_6["fa:fa-code _Step"]
+            direction TB
+                node85["fa:fa-code-branch run"]:::method
+                node86["fa:fa-code-branch undo"]:::method
+        end
+        subgraph func6["fa:fa-sitemap Module Functions"]
+            node87["fa:fa-key _ask"]:::private
+            node88["fa:fa-key _confirm"]:::private
+            node89["fa:fa-key _ask_list"]:::private
+            node90["fa:fa-key _render_probe"]:::private
+            node91["fa:fa-key _drain_probes"]:::private
+            node92["fa:fa-key _common_steps"]:::private
+            node93["fa:fa-key _minimal_steps"]:::private
+            node94["fa:fa-key _full_steps"]:::private
+            node95["fa:fa-key _select_template"]:::private
+            node96["fa:fa-key _run_wizard"]:::private
+            node97["fa:fa-code-branch action_create_adr"]:::method
+            node98["fa:fa-code-branch __init__"]:::method
+            node99["fa:fa-code-branch render"]:::method
+            node100["fa:fa-key _build_left"]:::private
+            node101["fa:fa-key _build_right"]:::private
+            node102["fa:fa-code-branch set_hint"]:::method
+            node103["fa:fa-code-branch clear_hint"]:::method
+            node104["fa:fa-code-branch add_log"]:::method
+            node105["fa:fa-code-branch pop_log"]:::method
+            node106["fa:fa-code-branch fire"]:::method
+            node107["fa:fa-key _fetch"]:::private
+            node108["fa:fa-code-branch wait_for_latest"]:::method
+            node109["fa:fa-code-branch drain"]:::method
+            node110["fa:fa-code-branch take_pending_probe"]:::method
+            node111["fa:fa-code-branch add_clarification"]:::method
+            node112["fa:fa-code-branch replay_step_sync"]:::method
+            node113["fa:fa-code-branch run"]:::method
+            node114["fa:fa-code-branch undo"]:::method
+        end
+    end
+    subgraph mod7["fa:fa-cube list_adrs"]
+        direction TB
+        subgraph func7["fa:fa-sitemap Module Functions"]
+            node115["fa:fa-code-branch action_list_adrs"]:::method
+        end
+    end
+    subgraph mod8["fa:fa-cube view_adr"]
+        direction TB
+        subgraph func8["fa:fa-sitemap Module Functions"]
+            node116["fa:fa-key _bullet_lines"]:::private
+            node117["fa:fa-key _render_adr"]:::private
+            node118["fa:fa-code-branch action_view_adr"]:::method
+        end
+    end
+    subgraph mod9["fa:fa-cube __init__"]
+        direction TB
+        subgraph func9["fa:fa-sitemap Module Functions"]
+            node119["fa:fa-code-branch menu_entries"]:::method
+        end
+    end
+    subgraph mod10["fa:fa-cube expand_adr"]
+        direction TB
+        subgraph func10["fa:fa-sitemap Module Functions"]
+            node120["fa:fa-code-branch action_expand_adr"]:::method
+        end
+    end
+    subgraph mod11["fa:fa-cube ingest_kb"]
+        direction TB
+        subgraph func11["fa:fa-sitemap Module Functions"]
+            node121["fa:fa-key _size_str"]:::private
+            node122["fa:fa-key _show_doc_table"]:::private
+            node123["fa:fa-key _clear"]:::private
+            node124["fa:fa-key _select_some"]:::private
+            node125["fa:fa-code-branch action_ingest_kb"]:::method
+            node126["fa:fa-key _redraw"]:::private
+        end
+    end
+    subgraph mod12["fa:fa-cube query_kb"]
+        direction TB
+        subgraph func12["fa:fa-sitemap Module Functions"]
+            node127["fa:fa-key _show_kb_sources"]:::private
+            node128["fa:fa-code-branch action_query_kb"]:::method
+        end
+    end
+    subgraph mod13["fa:fa-cube __init__"]
+        direction TB
+        subgraph func13["fa:fa-sitemap Module Functions"]
+            node129["fa:fa-code-branch menu_entries"]:::method
+        end
+    end
+    subgraph mod14["fa:fa-cube generate_gherkin"]
+        direction TB
+        subgraph func14["fa:fa-sitemap Module Functions"]
+            node130["fa:fa-code-branch action_generate_gherkin"]:::method
+        end
+    end
+    subgraph mod15["fa:fa-cube generate_personas"]
+        direction TB
+        subgraph func15["fa:fa-sitemap Module Functions"]
+            node131["fa:fa-code-branch action_generate_personas"]:::method
+        end
+    end
+    subgraph mod16["fa:fa-cube generate_stories"]
+        direction TB
+        subgraph func16["fa:fa-sitemap Module Functions"]
+            node132["fa:fa-code-branch action_generate_stories"]:::method
+        end
+    end
+    subgraph mod17["fa:fa-cube __init__"]
+        direction TB
+        subgraph func17["fa:fa-sitemap Module Functions"]
+            node133["fa:fa-code-branch menu_entries"]:::method
+        end
+    end
+    subgraph mod18["fa:fa-cube create_sow"]
+        direction TB
+        subgraph func18["fa:fa-sitemap Module Functions"]
+            node134["fa:fa-key _render_probe"]:::private
+            node135["fa:fa-key _ask_probe_answer"]:::private
+            node136["fa:fa-code-branch action_create_sow"]:::method
+        end
+    end
+    subgraph legend["Legend"]
+        l1["fa:fa-play-circle Constructor"]:::constructor
+        l2["fa:fa-code-branch Method"]:::method
+        l3["fa:fa-bolt Async Method"]:::async
+        l4["fa:fa-lock Property"]:::property
+        l5["fa:fa-cog Static Method"]:::static
+        l6["fa:fa-key Private Method"]:::private
+        l7["fa:fa-star Decorated Method"]:::decorated
+    end
+
+    %% Connections between methods
+    node128 --> node127
+    node44 --> node42
+    node45 --> node42
+    node48 --> node47
+    node122 --> node121
+    node124 --> node126
+    node125 --> node122
+    node125 --> node124
+    node126 --> node123
+    node126 --> node122
+    node59 --> node70
+    node59 --> node71
+    node72 --> node8
+    node69 --> node8
+    node91 --> node90
+    node79 --> node87
+    node84 --> node89
+    node74 --> node87
+    node76 --> node88
+    node81 --> node87
+    node96 --> node91
+    node97 --> node44
+    node97 --> node95
+    node97 --> node92
+    node97 --> node93
+    node97 --> node94
+    node97 --> node96
+    node97 --> node66
+    node97 --> node91
+    node97 --> node61
+    node97 --> node59
+    node97 --> node55
+    node97 --> node45
+    node129 --> node131
+    node129 --> node132
+    node129 --> node130
+    node57 --> node97
+    node57 --> node115
+    node57 --> node118
+    node133 --> node136
+    node115 --> node44
+    node115 --> node42
+    node132 --> node44
+    node52 --> node51
+    node53 --> node51
+    node55 --> node50
+    node55 --> node49
+    node131 --> node44
+    node136 --> node134
+    node120 --> node44
+    node117 --> node56
+    node117 --> node116
+    node118 --> node44
+    node118 --> node42
+    node118 --> node46
+    node118 --> node117
+    node40 --> node36
+    node40 --> node2
+    node40 --> node3
+    node40 --> node4
+    node40 --> node37
+    node40 --> node5
+    node40 --> node38
+    node40 --> node39
+    node40 --> node6
+    node119 --> node120
+    node119 --> node125
+    node119 --> node128
+
+    %% Styling
+    style title color:#ffffff, fill:#5D2E8C, stroke:#5D2E8C, stroke-width:0px, font-size:18px
+    classDef constructor color:#ffffff, fill:#E53935, stroke:#EF5350
+    classDef method color:#ffffff, fill:#00C853, stroke:#4CD964
+    classDef async color:#ffffff, fill:#AA00FF, stroke:#CE93D8
+    classDef property color:#ffffff, fill:#FF6D00, stroke:#FFAB40
+    classDef static color:#ffffff, fill:#00B0FF, stroke:#80D8FF
+    classDef private color:#ffffff, fill:#757575, stroke:#BDBDBD
+    classDef decorated color:#ffffff, fill:#2962FF, stroke:#5C8AFF

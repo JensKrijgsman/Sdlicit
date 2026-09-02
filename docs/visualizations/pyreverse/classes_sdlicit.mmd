@@ -1,0 +1,780 @@
+classDiagram
+  class ADRAgent {
+    _kb : KnowledgeBase | None
+    _llm
+    _socratic : SocraticAgent | None
+    _tom : ToMAgent | None
+    \_\_init\_\_(llm: LLMGateway, kb: KnowledgeBase | None, tom: ToMAgent | None, socratic: SocraticAgent | None) None
+    full_review(adr_content: str, prior_adrs: list[str]) AgentResult
+    review_step(step_name: str, step_value: str | list[str], partial_adr: dict, prior_adrs: list[str], clarifications: list[Clarification] | None) AgentResult
+  }
+  style ADRAgent fill:#99DDFF
+  class ADRDomainClassification {
+    adr_context : Optional[str]
+    adr_title : Optional[str]
+    domain_tag : Optional[str]
+  }
+  style ADRDomainClassification fill:#77AADD
+  class ADRFullReview {
+    adr_content : Optional[str]
+    prior_artifacts : Optional[str]
+    review : Optional[ReviewOutput]
+  }
+  style ADRFullReview fill:#77AADD
+  class ADRGeneration {
+    adr : Optional[ADRGenerationOutput]
+    kb_context : Optional[str]
+    prior_adrs : Optional[str]
+    requirements : Optional[str]
+    topic : Optional[str]
+  }
+  style ADRGeneration fill:#77AADD
+  class ADRGenerationOutput {
+    adr_id : Optional[str]
+    alternatives : Optional[list[str]]
+    cited_kb_sources : Optional[list[str]]
+    cited_prior_adrs : Optional[list[str]]
+    cited_requirements : Optional[list[str]]
+    consequences : Optional[str]
+    context : Optional[str]
+    decision : Optional[str]
+    title : Optional[str]
+  }
+  style ADRGenerationOutput fill:#77AADD
+  class ADRStepReview {
+    current_artifact : Optional[str]
+    kb_chunks : Optional[str]
+    step_name : Optional[str]
+    step_value : Optional[str]
+    suggestion : Optional[StepSuggestionOutput]
+  }
+  style ADRStepReview fill:#77AADD
+  class AdequacyVerdictOutput {
+    adequate : Optional[bool]
+    missing_facts : Optional[list[str]]
+    rationale : Optional[str]
+  }
+  style AdequacyVerdictOutput fill:#77AADD
+  class AgentResult {
+    compliance_notes : str
+    raw_text : str
+    socratic_probe : SocraticProbe | None
+    suggestions : list[Suggestion]
+    tom_observation : str
+    \_\_init\_\_(self, suggestions: list[Suggestion], compliance_notes: str, tom_observation: str, raw_text: str, socratic_probe: SocraticProbe | None) None
+  }
+  style AgentResult fill:#77AADD
+  class AgentReview {
+    agent_name : str
+    confidence : float
+    suggestions : Optional[list[str]]
+    summary : str
+  }
+  style AgentReview fill:#44BB99
+  class AnalyseRequest {
+    context_files : Optional[list[str]]
+    project_dir : Optional[str]
+    user_input : str
+  }
+  style AnalyseRequest fill:#99DDFF
+  class AnalyseResponse {
+    ok : bool
+    suggestions : Optional[list[str]]
+  }
+  style AnalyseResponse fill:#99DDFF
+  class BDDAgent {
+    _llm
+    _tom : ToMAgent | None
+    \_\_init\_\_(llm: LLMGateway, tom: ToMAgent | None) None
+    generate_gherkin(persona: str, requirements: str) AgentResult
+    generate_personas(artifacts: str) AgentResult
+  }
+  style BDDAgent fill:#BBCC33
+  class Clarification {
+    answer : str
+    question : str
+    turn : int
+    \_\_init\_\_(self, question: str, answer: str, turn: int) None
+  }
+  style Clarification fill:#77AADD
+  class ClarificationItem {
+    answer : str
+    question : str
+    turn : int
+  }
+  style ClarificationItem fill:#99DDFF
+  class ComplianceOutput {
+    assessment : Optional[str]
+    gaps : Optional[list[str]]
+    suggestions : Optional[list[str]]
+  }
+  style ComplianceOutput fill:#77AADD
+  class ExpandRequest {
+    adr_filename : Optional[str]
+    project_dir : Optional[str]
+    session_id : Optional[str]
+  }
+  style ExpandRequest fill:#44BB99
+  class ExpandResponse {
+    enhanced_adr : Optional[str]
+    reviews : Optional[list[AgentReview]]
+    tom_verdict : Optional[str]
+  }
+  style ExpandResponse fill:#44BB99
+  class ExtractSOW {
+    kb_context : Optional[str]
+    raw_brief : Optional[str]
+    sow : Optional[SOWOutput]
+  }
+  style ExtractSOW fill:#77AADD
+  class GenerateGherkinRequest {
+    personas : Optional[list[Persona]]
+    project_dir : Optional[str]
+    requirements : Optional[str]
+  }
+  style GenerateGherkinRequest fill:#BBCC33
+  class GenerateGherkinResponse {
+    gherkin : Optional[str]
+    raw_suggestion : Optional[str]
+  }
+  style GenerateGherkinResponse fill:#BBCC33
+  class GeneratePersonasRequest {
+    prior_reviews : Optional[list[dict[str, Any]]]
+    project_dir : Optional[str]
+    srs_content : Optional[str]
+  }
+  style GeneratePersonasRequest fill:#BBCC33
+  class GeneratePersonasResponse {
+    personas : Optional[list[Persona]]
+    raw_suggestion : Optional[str]
+  }
+  style GeneratePersonasResponse fill:#BBCC33
+  class GenerateStoriesRequest {
+    personas : Optional[str]
+    project_dir : Optional[str]
+    requirements : Optional[str]
+  }
+  style GenerateStoriesRequest fill:#BBCC33
+  class GenerateStoriesResponse {
+    raw_suggestion : Optional[str]
+    stories : Optional[list[UserStory]]
+  }
+  style GenerateStoriesResponse fill:#BBCC33
+  class GenerativeAgent {
+    generate(input_data: str) AgentResult
+  }
+  style GenerativeAgent fill:#77AADD
+  class GherkinGeneration {
+    gherkin : Optional[GherkinOutput]
+    persona : Optional[str]
+    requirements : Optional[str]
+  }
+  style GherkinGeneration fill:#77AADD
+  class GherkinOutput {
+    cites_adr : Optional[str]
+    cites_story : Optional[str]
+    feature_name : Optional[str]
+    gherkin : Optional[str]
+    scenario_id : Optional[str]
+  }
+  style GherkinOutput fill:#77AADD
+  class GroundingVerdictOutput {
+    grounded : Optional[bool]
+    rationale : Optional[str]
+    ungrounded_claims : Optional[list[str]]
+  }
+  style GroundingVerdictOutput fill:#77AADD
+  class IngestionManifest {
+    _data : dict[str, dict[str, Any]]
+    _path
+    \_\_init\_\_(working_dir: Path) None
+    _load() None
+    _save() None
+    all_statuses(docs: list[ScannedDocument]) dict[str, str]
+    get_status(relative_path: str, current_hash: str) str
+    mark_complete(relative_path: str, fhash: str, total_chunks: int) None
+    mark_error(relative_path: str, fhash: str) None
+    mark_partial(relative_path: str, fhash: str, total_chunks: int) None
+  }
+  style IngestionManifest fill:#44BB99
+  class InputAdequacyJudge {
+    agent_name : Optional[str]
+    prior_context : Optional[str]
+    user_input : Optional[str]
+    user_model : Optional[str]
+    verdict : Optional[AdequacyVerdictOutput]
+    what_was_asked : Optional[str]
+  }
+  style InputAdequacyJudge fill:#77AADD
+  class KBChunk {
+    relevance : float
+    source : str
+    text : str
+  }
+  style KBChunk fill:#44BB99
+  class KBIngestRequest {
+    project_dir : Optional[str]
+    selected_files : list[str] | None
+  }
+  style KBIngestRequest fill:#44BB99
+  class KBIngestResponse {
+    errors : Optional[list[str]]
+    ingested : Optional[int]
+    total_chunks : Optional[int]
+  }
+  style KBIngestResponse fill:#44BB99
+  class KBQueryRequest {
+    mode : Optional[str]
+    query : Optional[str]
+  }
+  style KBQueryRequest fill:#44BB99
+  class KBQueryResponse {
+    rag_enabled : Optional[bool]
+    results : Optional[list[KBChunk]]
+  }
+  style KBQueryResponse fill:#44BB99
+  class KBReference {
+    chunk : str
+    relevance : float
+    source : str
+    \_\_init\_\_(self, source: str, chunk: str, relevance: float) None
+  }
+  style KBReference fill:#77AADD
+  class KBScanResponse {
+    documents : Optional[list[dict[str, Any]]]
+    total_files : int
+  }
+  style KBScanResponse fill:#44BB99
+  class KBStatusResponse {
+    has_data : bool
+    rag_enabled : bool
+    working_dir : str
+  }
+  style KBStatusResponse fill:#44BB99
+  class LLMGateway {
+    _compiled_state : dict[str, Any]
+    _model_type : Literal['standard', 'thinking']
+    _modules : dict[str, dspy.Module]
+    _programs : dict[str, dspy.Module]
+    \_\_init\_\_(model_type: Literal['standard', 'thinking']) None
+    _get_module(signature: type[dspy.Signature]) dspy.Module
+    load_state(path: Path) None
+    predict(signature: type[dspy.Signature]) dspy.Prediction
+    register_program(sig_name: str, program: dspy.Module) None
+    save_state(path: Path) None
+  }
+  style LLMGateway fill:#77AADD
+  class OutputGroundingJudge {
+    kb_context : Optional[str]
+    llm_output : Optional[str]
+    user_input : Optional[str]
+    verdict : Optional[GroundingVerdictOutput]
+  }
+  style OutputGroundingJudge fill:#77AADD
+  class Persona {
+    frustrations : Optional[list[str]]
+    goals : Optional[list[str]]
+    name : str
+    role : str
+  }
+  style Persona fill:#BBCC33
+  class PersonaGeneration {
+    artifacts : Optional[str]
+    personas : Optional[list[PersonaOutput]]
+  }
+  style PersonaGeneration fill:#77AADD
+  class PersonaOutput {
+    frustrations : Optional[list[str]]
+    goals : Optional[list[str]]
+    name : str
+    persona_id : Optional[str]
+    role : str
+  }
+  style PersonaOutput fill:#77AADD
+  class PersonasOutput {
+    personas : Optional[list[PersonaOutput]]
+  }
+  style PersonasOutput fill:#77AADD
+  class RawInteraction {
+    agent : Optional[str]
+    data : Optional[dict[str, Any]]
+    event_type : Optional[str]
+    timestamp : Optional[str]
+  }
+  style RawInteraction fill:#44BB99
+  class RawSession {
+    ended_at : str | None
+    interactions : Optional[list[RawInteraction]]
+    session_id : str
+    stage : Optional[str]
+    started_at : Optional[str]
+  }
+  style RawSession fill:#44BB99
+  class RequirementAgent {
+    _kb : KnowledgeBase | None
+    _llm
+    _tom : ToMAgent | None
+    \_\_init\_\_(llm: LLMGateway, kb: KnowledgeBase | None, tom: ToMAgent | None) None
+    check(adr_content: str) AgentResult
+  }
+  style RequirementAgent fill:#44BB99
+  class RequirementCheck {
+    adr_content : Optional[str]
+    compliance : Optional[ComplianceOutput]
+    retrieved_context : Optional[str]
+  }
+  style RequirementCheck fill:#77AADD
+  class RequirementGeneration {
+    kb_context : Optional[str]
+    requirements : Optional[RequirementsOutput]
+    sow_content : Optional[str]
+  }
+  style RequirementGeneration fill:#77AADD
+  class RequirementItem {
+    domain : Optional[str]
+    req_id : Optional[str]
+    source : Optional[str]
+    statement : Optional[str]
+  }
+  style RequirementItem fill:#77AADD
+  class RequirementsOutput {
+    requirements : Optional[list[RequirementItem]]
+  }
+  style RequirementsOutput fill:#77AADD
+  class ResolutionVerdictOutput {
+    fatigue_detected : Optional[bool]
+    rationale : Optional[str]
+    resolved : Optional[bool]
+  }
+  style ResolutionVerdictOutput fill:#77AADD
+  class ReviewAgent {
+    review(content: str, context: dict[str, Any] | None) AgentResult
+  }
+  style ReviewAgent fill:#77AADD
+  class ReviewOutput {
+    issues : Optional[list[str]]
+    suggestions : Optional[list[str]]
+    summary : Optional[str]
+  }
+  style ReviewOutput fill:#77AADD
+  class SOWAgent {
+    _kb : KnowledgeBase | None
+    _llm
+    _socratic : SocraticAgent | None
+    _tom : ToMAgent | None
+    \_\_init\_\_(llm: LLMGateway, kb: KnowledgeBase | None, tom: ToMAgent | None, socratic: SocraticAgent | None) None
+    _render_sow(sow: object) str
+    create_from_brief(raw_text: str, clarifications: list[Clarification] | None) AgentResult
+  }
+  style SOWAgent fill:#99DDFF
+  class SOWOutput {
+    constraints : Optional[list[str]]
+    functional_requirements : Optional[list[str]]
+    non_functional_requirements : Optional[list[str]]
+    open_questions : Optional[list[str]]
+    out_of_scope : Optional[list[str]]
+    problem_statement : Optional[str]
+    project_name : str
+    stakeholders : Optional[list[SOWStakeholder]]
+  }
+  style SOWOutput fill:#77AADD
+  class SOWStakeholder {
+    needs : Optional[list[str]]
+    role : Optional[str]
+  }
+  style SOWStakeholder fill:#77AADD
+  class ScannedDocument {
+    path : Path
+    relative_path : str
+    size_bytes : int
+    suffix : str
+    \_\_init\_\_(self, path: Path, relative_path: str, size_bytes: int, suffix: str) None
+  }
+  style ScannedDocument fill:#44BB99
+  class SessionAnalysisOutput {
+    emotional_states : Optional[list[str]]
+    inferred_intents : Optional[list[str]]
+    interaction_patterns : Optional[list[str]]
+    preferences : Optional[dict[str, str]]
+    scaffolding_level : Optional[Literal['minimal', 'moderate', 'detailed']]
+  }
+  style SessionAnalysisOutput fill:#77AADD
+  class SessionUserModel {
+    analysed_at : Optional[str]
+    confidence_per_section : Optional[dict[str, float]]
+    emotional_states : Optional[list[str]]
+    inferred_intents : Optional[list[str]]
+    interaction_patterns : Optional[list[str]]
+    preferences : Optional[dict[str, str]]
+    scaffolding_level : Literal['minimal', 'moderate', 'detailed']
+    session_id : str
+  }
+  style SessionUserModel fill:#44BB99
+  class SocraticAgent {
+    _judge_mode : Literal
+    _kb : str
+    _llm
+    _max_turns : int
+    _tom : str
+    \_\_init\_\_(llm: LLMGateway, kb: 'KnowledgeBase | None', tom: 'ToMAgent | None', judge_mode: JudgeMode, max_turns: int) None
+    _format_history(clarifications: list[Clarification]) str
+    _kb_lookup(query: str) tuple[str, list[KBReference]]
+    _user_model_json() str
+    consult(originating_agent: str, what_was_asked: str, what_is_known: str, clarifications: list[Clarification] | None, suspect_output: str, issue: Literal['ambiguous_input', 'ungrounded_output'], missing_facts: list[str] | None, ungrounded_claims: list[str] | None) SocraticProbe | None
+    judge_input(agent_name: str, what_was_asked: str, user_input: str, prior_context: str) tuple[bool, list[str]]
+    judge_output(user_input: str, llm_output: str, kb_context: str) tuple[bool, list[str]]
+    judge_resolution(what_was_asked: str, clarifications: list[Clarification]) tuple[bool, bool]
+    log_answer(originating_agent: str, what_was_asked: str, clarification: Clarification) None
+    review_section(section_content: str, conversation_history: str, tom_state: 'ToMState') AgentResult
+  }
+  style SocraticAgent fill:#44BB99
+  class SocraticOutput {
+    question : Optional[str]
+    reasoning : Optional[str]
+    scaffolding_level : Optional[Literal['minimal', 'moderate', 'detailed']]
+  }
+  style SocraticOutput fill:#77AADD
+  class SocraticProbe {
+    max_turns : int
+    originating_agent : str
+    probe_id : str
+    question : str
+    rag_grounding : str
+    style : Literal['assumption', 'contradiction', 'depth', 'perspective']
+    turn : int
+    what_was_asked : str
+    \_\_init\_\_(self, probe_id: str, question: str, style: Literal['assumption', 'contradiction', 'depth', 'perspective'], originating_agent: str, what_was_asked: str, turn: int, max_turns: int, rag_grounding: str) None
+  }
+  style SocraticProbe fill:#77AADD
+  class SocraticProbeGeneration {
+    conversation_history : Optional[str]
+    issue : Optional[str]
+    kb_context : Optional[str]
+    missing_facts : Optional[str]
+    originating_agent : Optional[str]
+    probe : Optional[SocraticProbeOutput]
+    suspect_output : Optional[str]
+    ungrounded_claims : Optional[str]
+    user_model : Optional[str]
+    what_is_known : Optional[str]
+    what_was_asked : Optional[str]
+  }
+  style SocraticProbeGeneration fill:#77AADD
+  class SocraticProbeOut {
+    max_turns : int
+    originating_agent : str
+    probe_id : str
+    question : str
+    rag_grounding : str
+    style : Literal['assumption', 'contradiction', 'depth', 'perspective']
+    turn : int
+    what_was_asked : str
+  }
+  style SocraticProbeOut fill:#99DDFF
+  class SocraticProbeOutput {
+    question : Optional[str]
+    rag_grounding : Optional[str]
+    style : Optional[Literal['assumption', 'contradiction', 'depth', 'perspective']]
+  }
+  style SocraticProbeOutput fill:#77AADD
+  class SocraticResolutionJudge {
+    conversation_history : Optional[str]
+    user_model : Optional[str]
+    verdict : Optional[ResolutionVerdictOutput]
+    what_was_asked : Optional[str]
+  }
+  style SocraticResolutionJudge fill:#77AADD
+  class SocraticReview {
+    conversation_history : Optional[str]
+    kb_context : Optional[str]
+    response : Optional[SocraticOutput]
+    section_content : Optional[str]
+    tom_state : Optional[str]
+  }
+  style SocraticReview fill:#77AADD
+  class StepEventRequest {
+    clarifications : Optional[list[ClarificationItem]]
+    partial_fields : Optional[dict[str, Any]]
+    project_dir : Optional[str]
+    step_name : Optional[str]
+    step_value : Optional[Any]
+  }
+  style StepEventRequest fill:#99DDFF
+  class StepEventResponse {
+    compliance : str | None
+    socratic_probe : SocraticProbeOut | None
+    suggestion : StepSuggestion | None
+  }
+  style StepEventResponse fill:#99DDFF
+  class StepSuggestion {
+    agent_name : str
+    field : str
+    message : str
+    references : Optional[list[str]]
+    severity : str
+  }
+  style StepSuggestion fill:#99DDFF
+  class StepSuggestionOutput {
+    field : Optional[str]
+    message : Optional[str]
+    references : Optional[list[str]]
+    severity : Optional[Literal['low', 'medium', 'high']]
+    should_show : Optional[bool]
+  }
+  style StepSuggestionOutput fill:#77AADD
+  class StubGateway {
+    predict(signature: type[dspy.Signature]) dspy.Prediction
+  }
+  style StubGateway fill:#77AADD
+  class Suggestion {
+    field : str
+    message : str
+    references : list[KBReference]
+    severity : Literal['low', 'medium', 'high']
+    should_show : bool
+    \_\_init\_\_(self, field: str, message: str, severity: Literal['low', 'medium', 'high'], should_show: bool, references: list[KBReference]) None
+  }
+  style Suggestion fill:#77AADD
+  class TextChunk {
+    source_name : str
+    text : str
+    \_\_init\_\_(self, text: str, source_name: str) None
+  }
+  style TextChunk fill:#44BB99
+  class ToMADRStepConsult {
+    partial_adr : Optional[str]
+    recommendation : Optional[ToMRecommendationOutput]
+    session_history : Optional[str]
+    step_name : Optional[str]
+    step_value : Optional[str]
+    user_model : Optional[str]
+  }
+  style ToMADRStepConsult fill:#77AADD
+  class ToMAgent {
+    _llm
+    _memory : NoneType, ToMMemory | None
+    _raw_session : RawSession | None
+    _state
+    memory : ToMMemory | None
+    state : ToMState
+    \_\_init\_\_(llm: LLMGateway, chat_sessions_dir: Path | None, sdlicit_sessions_dir: Path | None, user_dir: Path | None) None
+    _analyze_session(raw: RawSession) SessionUserModel | None
+    _update_user_model(session_model: SessionUserModel) None
+    assess(agent_outputs: list[dict[str, str]]) AgentResult
+    consult(signature: type[dspy.Signature]) ToMRecommendation
+    consult_freeform(agent_query: str, current_context: str) ToMRecommendation
+    end_session() None
+    observe(event_type: str, data: dict[str, Any]) None
+    should_show(section: str, threshold: float) bool
+    start_session(stage: str) str
+    update_memory(session_id: str | None) dict[str, Any]
+  }
+  style ToMAgent fill:#44BB99
+  class ToMAssessment {
+    agent_outputs : Optional[str]
+    assessment : Optional[ToMOutput]
+    user_interactions : Optional[str]
+  }
+  style ToMAssessment fill:#77AADD
+  class ToMComplianceConsult {
+    adr_length : Optional[int]
+    recommendation : Optional[ToMRecommendationOutput]
+    session_history : Optional[str]
+    user_model : Optional[str]
+  }
+  style ToMComplianceConsult fill:#77AADD
+  class ToMConsultant {
+    consult(agent_query: str, current_context: str) Any
+    observe(event_type: str, data: dict[str, Any]) None
+    should_show(section: str, threshold: float) bool
+  }
+  style ToMConsultant fill:#77AADD
+  class ToMConsultation {
+    agent_query : Optional[str]
+    current_context : Optional[str]
+    recommendation : Optional[ToMRecommendationOutput]
+    session_history : Optional[str]
+    user_model : Optional[str]
+  }
+  style ToMConsultation fill:#77AADD
+  class ToMMemory {
+    _chat_dir : Path
+    _sdlicit_dir : Path
+    _user_dir : Path
+    \_\_init\_\_(chat_dir: Path, sdlicit_dir: Path, user_dir: Path) None
+    build_context_summary(max_sessions: int) str
+    list_raw_sessions() list[str]
+    list_session_models() list[str]
+    load_raw_session(session_id: str) RawSession | None
+    load_session_model(session_id: str) SessionUserModel | None
+    load_user_model() UserModel
+    recent_raw_sessions(n: int) list[RawSession]
+    recent_session_models(n: int) list[SessionUserModel]
+    save_raw_session(session: RawSession) Path
+    save_session_model(model: SessionUserModel) Path
+    save_user_model(model: UserModel) Path
+    search_interactions(query: str, max_results: int) list[dict[str, Any]]
+  }
+  style ToMMemory fill:#44BB99
+  class ToMOutput {
+    confidence : Optional[float]
+    observation : Optional[str]
+    scaffolding_level : Optional[Literal['minimal', 'moderate', 'detailed']]
+    user_goals : Optional[list[str]]
+  }
+  style ToMOutput fill:#77AADD
+  class ToMPersonaConsult {
+    artifacts_length : Optional[int]
+    recommendation : Optional[ToMRecommendationOutput]
+    session_history : Optional[str]
+    user_model : Optional[str]
+  }
+  style ToMPersonaConsult fill:#77AADD
+  class ToMRecommendation {
+    confidence : Optional[float]
+    inferred_goals : Optional[list[str]]
+    observation : Optional[str]
+    recommendation : Optional[str]
+    scaffolding_level : Literal['minimal', 'moderate', 'detailed']
+  }
+  style ToMRecommendation fill:#44BB99
+  class ToMRecommendationOutput {
+    confidence : Optional[float]
+    inferred_goals : Optional[list[str]]
+    observation : Optional[str]
+    recommendation : Optional[str]
+    scaffolding_level : Optional[Literal['minimal', 'moderate', 'detailed']]
+  }
+  style ToMRecommendationOutput fill:#77AADD
+  class ToMSOWBriefConsult {
+    brief_length : Optional[int]
+    recommendation : Optional[ToMRecommendationOutput]
+    session_history : Optional[str]
+    user_model : Optional[str]
+  }
+  style ToMSOWBriefConsult fill:#77AADD
+  class ToMSessionAnalysis {
+    analysis : Optional[SessionAnalysisOutput]
+    previous_user_model : Optional[str]
+    raw_session : Optional[str]
+  }
+  style ToMSessionAnalysis fill:#77AADD
+  class ToMSocraticConsult {
+    conversation_turns : Optional[int]
+    recommendation : Optional[ToMRecommendationOutput]
+    session_history : Optional[str]
+    user_model : Optional[str]
+  }
+  style ToMSocraticConsult fill:#77AADD
+  class ToMState {
+    confidence : dict[str, float]
+    inferred_goals : list[str]
+    interactions : list[dict[str, Any]]
+    scaffolding_level : str
+    session_id : str
+    stage : str
+    \_\_init\_\_(self, session_id: str, confidence: dict[str, float], interactions: list[dict[str, Any]], inferred_goals: list[str], scaffolding_level: str, stage: str) None
+  }
+  style ToMState fill:#44BB99
+  class ToMStoryConsult {
+    personas_length : Optional[int]
+    recommendation : Optional[ToMRecommendationOutput]
+    requirements_length : Optional[int]
+    session_history : Optional[str]
+    user_model : Optional[str]
+  }
+  style ToMStoryConsult fill:#77AADD
+  class ToMUserModelUpdate {
+    current_user_model : Optional[str]
+    new_session_analysis : Optional[str]
+    updated_model : Optional[UserModelOutput]
+  }
+  style ToMUserModelUpdate fill:#77AADD
+  class UserModel {
+    common_patterns : Optional[list[str]]
+    expertise_areas : Optional[list[str]]
+    interaction_style : Optional[str]
+    preference_clusters : Optional[dict[str, list[str]]]
+    scaffolding_preference : Literal['minimal', 'moderate', 'detailed']
+    session_count : int
+    updated_at : Optional[str]
+  }
+  style UserModel fill:#44BB99
+  class UserModelOutput {
+    common_patterns : Optional[list[str]]
+    expertise_areas : Optional[list[str]]
+    interaction_style : Optional[str]
+    preference_clusters : Optional[dict[str, list[str]]]
+    scaffolding_preference : Optional[Literal['minimal', 'moderate', 'detailed']]
+  }
+  style UserModelOutput fill:#77AADD
+  class UserStoriesOutput {
+    stories : Optional[list[UserStoryItem]]
+  }
+  style UserStoriesOutput fill:#77AADD
+  class UserStory {
+    persona_id : Optional[str]
+    requirement_ids : Optional[list[str]]
+    statement : Optional[str]
+    story_id : Optional[str]
+  }
+  style UserStory fill:#BBCC33
+  class UserStoryAgent {
+    _llm
+    _tom : ToMAgent | None
+    \_\_init\_\_(llm: LLMGateway, tom: ToMAgent | None) None
+    generate(personas: str, requirements: str, adrs: str) AgentResult
+  }
+  style UserStoryAgent fill:#BBCC33
+  class UserStoryGeneration {
+    adrs : Optional[str]
+    personas : Optional[str]
+    requirements : Optional[str]
+    stories : Optional[UserStoriesOutput]
+  }
+  style UserStoryGeneration fill:#77AADD
+  class UserStoryItem {
+    persona_id : Optional[str]
+    requirement_ids : Optional[list[str]]
+    statement : Optional[str]
+    story_id : Optional[str]
+  }
+  style UserStoryItem fill:#77AADD
+  class ValidatedADRProgram {
+    _ID_RE
+    generate
+    \_\_init\_\_(model_type: Literal['standard', 'thinking']) None
+    forward(topic: str, requirements: str, prior_adrs: str, kb_context: str) dspy.Prediction
+  }
+  style ValidatedADRProgram fill:#77AADD
+  class ValidatedGherkinProgram {
+    generate
+    \_\_init\_\_(model_type: Literal['standard', 'thinking']) None
+    forward(persona: str, requirements: str) dspy.Prediction
+  }
+  style ValidatedGherkinProgram fill:#77AADD
+  class ValidatedRequirementProgram {
+    _ID_RE
+    generate
+    \_\_init\_\_(model_type: Literal['standard', 'thinking']) None
+    forward(sow_content: str, kb_context: str) dspy.Prediction
+  }
+  style ValidatedRequirementProgram fill:#77AADD
+  class ValidatedUserStoryProgram {
+    _ID_RE
+    _STORY_RE
+    generate
+    \_\_init\_\_(model_type: Literal['standard', 'thinking']) None
+    forward(personas: str, requirements: str, adrs: str) dspy.Prediction
+  }
+  style ValidatedUserStoryProgram fill:#77AADD
+  StubGateway --|> LLMGateway
+  ToMState --* ToMAgent : _state
+  RawSession --* ToMAgent : _raw_session
+  LLMGateway --o ADRAgent : _llm
+  LLMGateway --o SOWAgent : _llm
+  LLMGateway --o RequirementAgent : _llm
+  LLMGateway --o SocraticAgent : _llm
+  LLMGateway --o ToMAgent : _llm
+  LLMGateway --o BDDAgent : _llm
+  LLMGateway --o UserStoryAgent : _llm

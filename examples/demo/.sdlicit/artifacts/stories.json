@@ -1,0 +1,131 @@
+{
+  "stories": [
+    {
+      "story_id": "STORY-P01-001",
+      "persona_id": "PERSONA-01",
+      "requirement_ids": [
+        "REQ-TIME-01"
+      ],
+      "statement": "As a Dr. Amina Patel, I want to create and manage a billable-hours draft for a selected date range aligned to configured funder reporting periods, so that my work is organized exactly for the period I\u2019m reporting."
+    },
+    {
+      "story_id": "STORY-P01-002",
+      "persona_id": "PERSONA-01",
+      "requirement_ids": [
+        "REQ-TIME-02",
+        "REQ-TIME-03",
+        "REQ-ROB-01"
+      ],
+      "statement": "As a Dr. Amina Patel, I want the system to compute suggested billable hours per configured project and sub-case from reconciled Outlook events and GitHub activity within my selected date range, including a coverage metric and low-confidence markings, so that I can trust what\u2019s being suggested and quickly spot what needs review."
+    },
+    {
+      "story_id": "STORY-P01-003",
+      "persona_id": "PERSONA-01",
+      "requirement_ids": [
+        "REQ-TIME-04"
+      ],
+      "statement": "As a Dr. Amina Patel, I want to review how each Outlook/GitHub item is mapped to a project/sub-case with clear confidence and rationale, so that I understand why time is attributed the way it is without technical jargon."
+    },
+    {
+      "story_id": "STORY-P01-004",
+      "persona_id": "PERSONA-01",
+      "requirement_ids": [
+        "REQ-TIME-05"
+      ],
+      "statement": "As a Dr. Amina Patel, I want to edit the suggested hours per project/sub-case in my draft (set exact values and add deviation notes), so that the final numbers reflect my actual billable time."
+    },
+    {
+      "story_id": "STORY-P01-005",
+      "persona_id": "PERSONA-01",
+      "requirement_ids": [
+        "REQ-TIME-06",
+        "REQ-ROB-01"
+      ],
+      "statement": "As a Dr. Amina Patel, I want the draft to explicitly show gaps or unmapped time candidates and highlight low-confidence attributions, so that I can resolve missing items instead of discovering them later."
+    },
+    {
+      "story_id": "STORY-P01-006",
+      "persona_id": "PERSONA-01",
+      "requirement_ids": [
+        "REQ-TIME-07",
+        "REQ-TIME-08",
+        "REQ-TIME-02",
+        "REQ-CTRL-02"
+      ],
+      "statement": "As a Dr. Amina Patel, I want the system to export only a researcher-reviewed draft into the configured funder-specific Excel output format after I mark the draft as ready, so that the export matches my edits and is validated before I use it for reporting."
+    },
+    {
+      "story_id": "STORY-P02-001",
+      "persona_id": "PERSONA-02",
+      "requirement_ids": [
+        "REQ-TIME-01",
+        "REQ-SEC-01"
+      ],
+      "statement": "As a Marco Rossi, I want to monitor ingestion status for each user/source and verify configuration impacts across Outlook and GitHub processing, so that pilot failures can be diagnosed without disrupting user-specific configurations."
+    },
+    {
+      "story_id": "STORY-P02-002",
+      "persona_id": "PERSONA-02",
+      "requirement_ids": [
+        "REQ-ROB-01",
+        "REQ-TIME-04",
+        "REQ-TIME-06"
+      ],
+      "statement": "As a Marco Rossi, I want to troubleshoot and reason about sparse or inconsistent GitHub signals by using coverage and low-confidence/low-mapping indicators, so that I can improve mapping heuristics and guide researchers to the right review actions."
+    },
+    {
+      "story_id": "STORY-P02-003",
+      "persona_id": "PERSONA-02",
+      "requirement_ids": [
+        "REQ-TIME-08"
+      ],
+      "statement": "As a Marco Rossi, I want a configuration mechanism to map internal project/sub-case identifiers to funder-specific row/field names, so that export formatting changes can be made via configuration rather than code changes."
+    },
+    {
+      "story_id": "STORY-P02-004",
+      "persona_id": "PERSONA-02",
+      "requirement_ids": [
+        "REQ-TIME-07",
+        "REQ-TIME-04",
+        "REQ-LG-01"
+      ],
+      "statement": "As a Marco Rossi, I want the system\u2019s trace summary to support pilot evaluation by linking attributed hours to contributing Outlook/GitHub items at a summary level, so that I can verify what was derived without relying on raw source content."
+    },
+    {
+      "story_id": "STORY-P03-001",
+      "persona_id": "PERSONA-03",
+      "requirement_ids": [
+        "REQ-CTRL-01",
+        "REQ-SEC-01"
+      ],
+      "statement": "As a Sofia Nguyen, I want the system to enforce RBAC so researchers can only access their own attribution drafts and mappings by default, so that pilot privacy expectations are not violated."
+    },
+    {
+      "story_id": "STORY-P03-002",
+      "persona_id": "PERSONA-03",
+      "requirement_ids": [
+        "REQ-SEC-02",
+        "REQ-SEC-03",
+        "REQ-LG-01"
+      ],
+      "statement": "As a Sofia Nguyen, I want the system to store only the minimum necessary fields with configurable retention (including an upper bound) and provide an attribution trace summary link, so that privacy and auditability are satisfied without over-collecting data."
+    },
+    {
+      "story_id": "STORY-P03-003",
+      "persona_id": "PERSONA-03",
+      "requirement_ids": [
+        "REQ-CTRL-02",
+        "REQ-TIME-07"
+      ],
+      "statement": "As a Sofia Nguyen, I want export generation and any \u201cuse for reporting\u201d action to be blocked until the researcher explicitly reviews and marks the draft as ready, so that exports cannot be produced prematurely."
+    },
+    {
+      "story_id": "STORY-P03-004",
+      "persona_id": "PERSONA-03",
+      "requirement_ids": [
+        "REQ-TIME-07"
+      ],
+      "statement": "As a Sofia Nguyen, I want funder-specific exports to conform to the configured Excel template structure and required columns/totals validation, so that researchers can trust the output for reporting."
+    }
+  ]
+}

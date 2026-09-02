@@ -1,0 +1,99 @@
+classDiagram
+  class api_client {
+  }
+  style api_client fill:#77AADD
+  class cli_client {
+  }
+  style cli_client fill:#99DDFF
+  class shared {
+  }
+  style shared fill:#44BB99
+  class files {
+  }
+  style files fill:#44BB99
+  class madr {
+  }
+  style madr fill:#44BB99
+  class parsers {
+  }
+  style parsers fill:#44BB99
+  class stages {
+  }
+  style stages fill:#BBCC33
+  class composing {
+  }
+  style composing fill:#AAAA00
+  class create_adr {
+  }
+  style create_adr fill:#AAAA00
+  class list_adrs {
+  }
+  style list_adrs fill:#AAAA00
+  class view_adr {
+  }
+  style view_adr fill:#AAAA00
+  class expansion {
+  }
+  style expansion fill:#EEDD88
+  class expand_adr {
+  }
+  style expand_adr fill:#EEDD88
+  class ingest_kb {
+  }
+  style ingest_kb fill:#EEDD88
+  class query_kb {
+  }
+  style query_kb fill:#EEDD88
+  class generation {
+  }
+  style generation fill:#EE8866
+  class generate_gherkin {
+  }
+  style generate_gherkin fill:#EE8866
+  class generate_personas {
+  }
+  style generate_personas fill:#EE8866
+  class generate_stories {
+  }
+  style generate_stories fill:#EE8866
+  class intake {
+  }
+  style intake fill:#FFAABB
+  class create_sow {
+  }
+  style create_sow fill:#FFAABB
+  cli_client --> api_client
+  cli_client --> composing
+  cli_client --> expansion
+  cli_client --> generation
+  cli_client --> intake
+  composing --> create_adr
+  composing --> list_adrs
+  composing --> view_adr
+  create_adr --> files
+  create_adr --> madr
+  list_adrs --> files
+  view_adr --> files
+  view_adr --> parsers
+  expansion --> expand_adr
+  expansion --> ingest_kb
+  expansion --> query_kb
+  expand_adr --> files
+  generation --> generate_gherkin
+  generation --> generate_personas
+  generation --> generate_stories
+  generate_personas --> files
+  generate_stories --> files
+  intake --> create_sow
+  composing ..> api_client
+  create_adr ..> api_client
+  expansion ..> api_client
+  expand_adr ..> api_client
+  ingest_kb ..> api_client
+  query_kb ..> api_client
+  generation ..> api_client
+  generate_gherkin ..> api_client
+  generate_personas ..> api_client
+  generate_stories ..> api_client
+  intake ..> api_client
+  create_sow ..> api_client

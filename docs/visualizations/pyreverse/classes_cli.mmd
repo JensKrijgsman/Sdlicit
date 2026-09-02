@@ -1,0 +1,149 @@
+classDiagram
+  class AdrFields {
+    chosen_option : str
+    consequences_negative : list[str]
+    consequences_positive : list[str]
+    consulted : str
+    context : str
+    date : str
+    decision : str
+    decision_drivers : list[str]
+    decision_makers : str
+    informed : str
+    options_considered : list[str]
+    status : str
+    template : str
+    title : str
+    \_\_init\_\_(self, title: str, status: str, date: str, template: str, context: str, options_considered: list[str], chosen_option: str, decision: str, consequences_positive: list[str], consequences_negative: list[str], decision_drivers: list[str], decision_makers: str, consulted: str, informed: str) None
+  }
+  style AdrFields fill:#44BB99
+  class ComposeResponse {
+    content : str
+    filename : str
+  }
+  style ComposeResponse fill:#44BB99
+  class SdlicitClient {
+    _base : str
+    server_url : str
+    \_\_init\_\_(base_url: str) None
+    analyse_input(user_input: str, context_files: list[str]) dict[str, Any]
+    create_sow(raw_brief: str, clarifications: list[dict[str, Any]] | None) dict[str, Any]
+    end_session() dict[str, Any]
+    expand_adr(adr_filename: str, project_dir: str, session_id: str) dict[str, Any]
+    generate_gherkin(project_dir: str, personas: list[dict[str, Any]], requirements: str) dict[str, Any]
+    generate_personas(project_dir: str, srs_content: str) dict[str, Any]
+    generate_stories(project_dir: str, personas: str, requirements: str) dict[str, Any]
+    get_config() dict[str, Any]
+    health() bool
+    ingest_kb(project_dir: str, selected_files: list[str] | None) Iterator[httpx.Response]
+    init_project(project_dir: str) dict[str, Any]
+    kb_status(project_dir: str) dict[str, Any]
+    query_kb(query: str, mode: str) dict[str, Any]
+    scan_documents(project_dir: str) dict[str, Any]
+    start_session(stage: str) str | None
+    step_event(step_name: str, step_value: Any, partial_fields: dict[str, Any], project_dir: str, clarifications: list[dict[str, Any]] | None) dict[str, Any]
+  }
+  style SdlicitClient fill:#77AADD
+  class _ADRSession {
+    _clarifications : dict[str, list[dict[str, Any]]]
+    _hint : str
+    _last_step_value : dict[str, Any]
+    _lock : lock
+    _log : list[tuple[str, str, str]]
+    _pending : list[threading.Thread]
+    _probes : dict[str, list[dict[str, Any]]]
+    _suggestions : list[_Suggestion]
+    client : str
+    fields : dict[str, Any]
+    template : str
+    working_dir : str
+    \_\_init\_\_(client: 'SdlicitClient', working_dir: str, template: str) None
+    _build_left() Panel
+    _build_right() Panel
+    _fetch(step_name: str, value: Any, color: str, snapshot: dict[str, Any]) None
+    add_clarification(step_name: str, question: str, answer: str, turn: int) None
+    add_log(field: str, label: str, preview: str) None
+    clear_hint() None
+    drain(timeout: float) None
+    fire(step_name: str, value: Any) None
+    pop_log(count: int) None
+    render() None
+    replay_step_sync(step_name: str) dict[str, Any]
+    set_hint(hint: str) None
+    take_pending_probe() tuple[str, dict[str, Any]] | None
+    wait_for_latest(timeout: float) None
+  }
+  style _ADRSession fill:#AAAA00
+  class _ChosenOptionStep {
+    _log_n : int
+    field : str
+    label : str
+    \_\_init\_\_() None
+    run(s: _ADRSession) _R
+  }
+  style _ChosenOptionStep fill:#AAAA00
+  class _ConseqStep {
+    _log_n : int
+    field : str
+    label : str
+    \_\_init\_\_() None
+    run(s: _ADRSession) _R
+    undo(s: _ADRSession) None
+  }
+  style _ConseqStep fill:#AAAA00
+  class _FieldStep {
+    _log_n : int
+    choices : NoneType
+    default : NoneType
+    field : str
+    fire : bool
+    label : str
+    prompt : str
+    \_\_init\_\_(field: str, label: str, prompt: str) None
+    run(s: _ADRSession) _R
+  }
+  style _FieldStep fill:#AAAA00
+  class _FrontmatterStep {
+    _log_n : int
+    field : str
+    label : str
+    \_\_init\_\_() None
+    run(s: _ADRSession) _R
+    undo(s: _ADRSession) None
+  }
+  style _FrontmatterStep fill:#AAAA00
+  class _ListStep {
+    _log_n : int
+    field : str
+    fire : bool
+    item_prompt : str
+    label : str
+    \_\_init\_\_(field: str, label: str, item_prompt: str) None
+    run(s: _ADRSession) _R
+  }
+  style _ListStep fill:#AAAA00
+  class _R {
+    name
+  }
+  style _R fill:#AAAA00
+  class _Step {
+    _log_n : int
+    field : str
+    label : str
+    run(s: _ADRSession)* _R
+    undo(s: _ADRSession) None
+  }
+  style _Step fill:#AAAA00
+  class _Suggestion {
+    agent : str
+    color : str
+    kind : str
+    message : str
+    step : str
+  }
+  style _Suggestion fill:#AAAA00
+  _ChosenOptionStep --|> _Step
+  _ConseqStep --|> _Step
+  _FieldStep --|> _Step
+  _FrontmatterStep --|> _Step
+  _ListStep --|> _Step

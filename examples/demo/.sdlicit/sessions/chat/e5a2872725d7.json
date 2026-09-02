@@ -1,0 +1,21 @@
+{
+  "session_id": "e5a2872725d7",
+  "started_at": "2026-05-24T22:22:18.879Z",
+  "ended_at": "2026-05-24T22:51:09.955Z",
+  "stage": "extension",
+  "interactions": [
+    {
+      "timestamp": "2026-05-24T22:22:19.133Z",
+      "event_type": "session_start",
+      "agent": "extension",
+      "data": {
+        "stage": "extension"
+      }
+    },
+    {
+      "timestamp": "2026-05-24T22:51:09.955Z",
+      "event_type": "session_end",
+      "agent": "extension"
+    }
+  ]
+}

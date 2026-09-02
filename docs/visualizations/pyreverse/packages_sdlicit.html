@@ -1,0 +1,187 @@
+<html>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+      <div class="mermaid">
+    
+        classDiagram
+          class agents {
+          }
+          style agents fill:#77AADD
+          class base {
+          }
+          style base fill:#77AADD
+          class llm {
+          }
+          style llm fill:#77AADD
+          class dspy_modules {
+          }
+          style dspy_modules fill:#77AADD
+          class dspy_programs {
+          }
+          style dspy_programs fill:#77AADD
+          class gateway {
+          }
+          style gateway fill:#77AADD
+          class composing_stage {
+          }
+          style composing_stage fill:#99DDFF
+          class agents {
+          }
+          style agents fill:#99DDFF
+          class adr_agent {
+          }
+          style adr_agent fill:#99DDFF
+          class sow_agent {
+          }
+          style sow_agent fill:#99DDFF
+          class models {
+          }
+          style models fill:#99DDFF
+          class router {
+          }
+          style router fill:#99DDFF
+          class service {
+          }
+          style service fill:#99DDFF
+          class tools {
+          }
+          style tools fill:#99DDFF
+          class madr_tools {
+          }
+          style madr_tools fill:#99DDFF
+          class expansion_stage {
+          }
+          style expansion_stage fill:#44BB99
+          class agents {
+          }
+          style agents fill:#44BB99
+          class requirement_agent {
+          }
+          style requirement_agent fill:#44BB99
+          class socratic_agent {
+          }
+          style socratic_agent fill:#44BB99
+          class tom_agent {
+          }
+          style tom_agent fill:#44BB99
+          class tom_memory {
+          }
+          style tom_memory fill:#44BB99
+          class tom_models {
+          }
+          style tom_models fill:#44BB99
+          class document_scanner {
+          }
+          style document_scanner fill:#44BB99
+          class models {
+          }
+          style models fill:#44BB99
+          class router {
+          }
+          style router fill:#44BB99
+          class service {
+          }
+          style service fill:#44BB99
+          class tools {
+          }
+          style tools fill:#44BB99
+          class rag_tools {
+          }
+          style rag_tools fill:#44BB99
+          class generation_stage {
+          }
+          style generation_stage fill:#BBCC33
+          class agents {
+          }
+          style agents fill:#BBCC33
+          class bdd_facilitator_agent {
+          }
+          style bdd_facilitator_agent fill:#BBCC33
+          class user_story_agent {
+          }
+          style user_story_agent fill:#BBCC33
+          class models {
+          }
+          style models fill:#BBCC33
+          class router {
+          }
+          style router fill:#BBCC33
+          class service {
+          }
+          style service fill:#BBCC33
+          class tools {
+          }
+          style tools fill:#BBCC33
+          class persona_tools {
+          }
+          style persona_tools fill:#BBCC33
+          class helpers {
+          }
+          style helpers fill:#AAAA00
+          class parsers {
+          }
+          style parsers fill:#AAAA00
+          class project_files {
+          }
+          style project_files fill:#AAAA00
+          agents --> base
+          llm --> gateway
+          dspy_programs --> dspy_modules
+          agents --> adr_agent
+          agents --> sow_agent
+          adr_agent --> base
+          adr_agent --> dspy_modules
+          adr_agent --> gateway
+          sow_agent --> base
+          sow_agent --> dspy_modules
+          sow_agent --> gateway
+          router --> models
+          router --> service
+          service --> base
+          service --> models
+          service --> project_files
+          madr_tools --> parsers
+          agents --> requirement_agent
+          agents --> socratic_agent
+          agents --> tom_agent
+          requirement_agent --> base
+          requirement_agent --> dspy_modules
+          requirement_agent --> gateway
+          socratic_agent --> base
+          socratic_agent --> dspy_modules
+          socratic_agent --> gateway
+          tom_agent --> base
+          tom_agent --> dspy_modules
+          tom_agent --> gateway
+          tom_agent --> tom_memory
+          tom_agent --> tom_models
+          tom_memory --> tom_models
+          router --> document_scanner
+          router --> models
+          router --> service
+          service --> models
+          service --> project_files
+          agents --> bdd_facilitator_agent
+          bdd_facilitator_agent --> base
+          bdd_facilitator_agent --> dspy_modules
+          bdd_facilitator_agent --> gateway
+          user_story_agent --> base
+          user_story_agent --> dspy_modules
+          user_story_agent --> gateway
+          router --> models
+          router --> service
+          service --> models
+          service --> project_files
+          helpers --> parsers
+          adr_agent ..> socratic_agent
+          adr_agent ..> tom_agent
+          sow_agent ..> socratic_agent
+          sow_agent ..> tom_agent
+          requirement_agent ..> tom_agent
+          socratic_agent ..> tom_agent
+          bdd_facilitator_agent ..> tom_agent
+          user_story_agent ..> tom_agent
+  
+       </div>
+  </body>
+</html>

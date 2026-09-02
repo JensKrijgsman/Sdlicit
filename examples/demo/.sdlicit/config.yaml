@@ -1,0 +1,60 @@
+# Sdlicit configuration — all settings with defaults
+# Secrets (api_key) should be set via OPENROUTER_API_KEY / OLLAMA_HOST env vars
+
+# --- Provider & Model ---
+provider: openrouter # openrouter | ollama
+model: openai/gpt-5.4-nano # any model slug supported by provider
+model_type: standard # standard | thinking (auto-detected if omitted)
+ollama_host: http://localhost:11434 # only used when provider=ollama
+embed_model: openai/text-embedding-3-large
+embed_dim: 3072 # must match embed_model output dimension
+embed_max_tokens: 8192 # max tokens per embedding request
+
+# Per-agent model overrides (agents not listed use global `model`)
+model_overrides: {}
+#  sow: "openai/gpt-4o"
+#  socratic: "anthropic/claude-sonnet-4"
+
+# --- Knowledge Base / RAG ---
+kb_working_dir: .sdlicit/knowledge/lightrag_workdir
+kb_probe_method: networkx # networkx (fast, no LLM) | local (LightRAG top_k=1)
+kb_knowledge_prefix: "knowledge/" # source prefix for knowledge store filtering
+kb_artifacts_prefix: "artifacts/" # source prefix for artifact store filtering
+
+# Per-agent default store: knowledge | artifacts | all
+kb_agent_stores:
+  sow: all
+  adr: artifacts
+  socratic: all
+  requirement: knowledge
+
+# Static context injection (bypasses LightRAG, useful for fast testing)
+context_override: "" # non-empty string replaces all KB queries
+
+# --- Agent Feature Flags (set false for ablation) ---
+enable_rag: true
+enable_tom: true
+enable_socratic: true
+
+# --- Socratic Probing ---
+socratic_judge_mode: hybrid # dspy | hybrid | heuristic
+socratic_max_turns: 7 # max follow-up turns per field
+
+# --- Theory of Mind ---
+tom_focus: all # all | scaffolding | frustration | preferences
+
+# --- Traceability ---
+trace_check_mode: semantic # structural | semantic | full
+traceability_graph_source: frontmatter # frontmatter | lightrag
+
+# --- Session & Logging ---
+suggestion_threshold: 0.5 # min confidence to surface a suggestion
+log_prompts: true # log full LLM prompts to session dir
+
+# --- Context Window / Compaction ---
+model_context_window: 8192 # approximate context window of active model
+compact_threshold_pct: 0.4 # fraction triggering ToM-driven compaction
+
+# --- Agentic Mode (ReAct tool-calling) ---
+agentic: true # true = ReAct loop, false = fixed pipeline
+agentic_max_iters: 5 # max tool-call iterations per agent call

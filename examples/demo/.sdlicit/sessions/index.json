@@ -1,0 +1,18 @@
+{
+  "recent": [
+    {
+      "session_id": "e5a2872725d7",
+      "started_at": "2026-05-24T22:22:18.879Z",
+      "last_event_at": "2026-05-24T22:51:09.959Z",
+      "status": "active"
+    },
+    {
+      "session_id": "938655b522a2",
+      "started_at": "2026-05-24T14:50:21.233Z",
+      "last_event_at": "2026-05-24T14:50:21.355Z",
+      "status": "active"
+    }
+  ],
+  "last_session_id": "e5a2872725d7",
+  "active_session_id": "e5a2872725d7"
+}

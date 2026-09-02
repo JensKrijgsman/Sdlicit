@@ -1,0 +1,574 @@
+{
+    "name": "sdlicit",
+    "displayName": "Sdlicit",
+    "description": "VS Code frontend for the Sdlicit SDLC artifact framework — create SOWs, ADRs, SRS, BDD scenarios with AI-powered Socratic elicitation and knowledge-base grounding.",
+    "publisher": "sdlicit",
+    "version": "0.5.0",
+    "engines": {
+        "vscode": "^1.85.0"
+    },
+    "extensionDependencies": [
+        "tomoki1207.pdf"
+    ],
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onView:sdlicit.artifacts",
+        "onCommand:sdlicit.openTraceGraph"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "sdlicit.refresh",
+                "title": "Refresh",
+                "category": "Sdlicit",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "sdlicit.newArtifact",
+                "title": "New Artifact…",
+                "category": "Sdlicit",
+                "icon": "$(add)"
+            },
+            {
+                "command": "sdlicit.guidedFlow",
+                "title": "Guided Flow (Full Pipeline)",
+                "category": "Sdlicit",
+                "icon": "$(rocket)"
+            },
+            {
+                "command": "sdlicit.viewSOW",
+                "title": "View SOW",
+                "category": "Sdlicit",
+                "icon": "$(file-text)"
+            },
+            {
+                "command": "sdlicit.viewADR",
+                "title": "View ADR",
+                "category": "Sdlicit",
+                "icon": "$(file-text)"
+            },
+            {
+                "command": "sdlicit.viewSRS",
+                "title": "View SRS",
+                "category": "Sdlicit",
+                "icon": "$(list-unordered)"
+            },
+            {
+                "command": "sdlicit.viewPersonas",
+                "title": "View Personas",
+                "category": "Sdlicit",
+                "icon": "$(person)"
+            },
+            {
+                "command": "sdlicit.viewStories",
+                "title": "View User Stories",
+                "category": "Sdlicit",
+                "icon": "$(bookmark)"
+            },
+            {
+                "command": "sdlicit.viewBDD",
+                "title": "View BDD Scenario",
+                "category": "Sdlicit",
+                "icon": "$(beaker)"
+            },
+            {
+                "command": "sdlicit.viewBDDOverview",
+                "title": "View BDD Overview",
+                "category": "Sdlicit",
+                "icon": "$(list-unordered)"
+            },
+            {
+                "command": "sdlicit.openCanvas",
+                "title": "Open in Canvas",
+                "category": "Sdlicit",
+                "icon": "$(open-preview)"
+            },
+            {
+                "command": "sdlicit.openArtifact",
+                "title": "Open Artifact",
+                "category": "Sdlicit"
+            },
+            {
+                "command": "sdlicit.toggleViewMode",
+                "title": "Toggle View Mode (Overview/Focus)",
+                "category": "Sdlicit",
+                "icon": "$(split-horizontal)"
+            },
+            {
+                "command": "sdlicit.openMarkdownSource",
+                "title": "View Markdown Source",
+                "category": "Sdlicit",
+                "icon": "$(markdown)"
+            },
+            {
+                "command": "sdlicit.suggestDirections",
+                "title": "Suggest ADR Directions",
+                "category": "Sdlicit",
+                "icon": "$(lightbulb)"
+            },
+            {
+                "command": "sdlicit.expandADR",
+                "title": "Review ADR (Multi-Agent)",
+                "category": "Sdlicit",
+                "icon": "$(eye)"
+            },
+            {
+                "command": "sdlicit.queryKB",
+                "title": "Query Knowledge Base",
+                "category": "Sdlicit",
+                "icon": "$(search)"
+            },
+            {
+                "command": "sdlicit.ingestKB",
+                "title": "Ingest Documents into KB",
+                "category": "Sdlicit",
+                "icon": "$(database)"
+            },
+            {
+                "command": "sdlicit.generateScenarios",
+                "title": "Generate BDD Scenarios",
+                "category": "Sdlicit",
+                "icon": "$(beaker)"
+            },
+            {
+                "command": "sdlicit.showEventDetail",
+                "title": "Show Event Detail",
+                "category": "Sdlicit"
+            },
+            {
+                "command": "sdlicit.deleteSession",
+                "title": "Delete Session",
+                "category": "Sdlicit",
+                "icon": "$(trash)"
+            },
+            {
+                "command": "sdlicit.compactSession",
+                "title": "Compact Session",
+                "category": "Sdlicit",
+                "icon": "$(fold)"
+            },
+            {
+                "command": "sdlicit.savePreference",
+                "title": "Save Preference",
+                "category": "Sdlicit"
+            },
+            {
+                "command": "sdlicit.startServer",
+                "title": "Start/Restart Server",
+                "category": "Sdlicit",
+                "icon": "$(play)"
+            },
+            {
+                "command": "sdlicit.showTokenDetails",
+                "title": "Show Token Usage",
+                "category": "Sdlicit"
+            },
+            {
+                "command": "sdlicit.toggleHideAccepted",
+                "title": "Toggle Hide Accepted",
+                "category": "Sdlicit",
+                "icon": "$(filter)"
+            },
+            {
+                "command": "sdlicit.toggleKBStatus",
+                "title": "Toggle KB Ingestion Status",
+                "category": "Sdlicit",
+                "icon": "$(database)"
+            },
+            {
+                "command": "sdlicit.openTraceGraph",
+                "title": "Open Trace Graph",
+                "category": "Sdlicit",
+                "icon": "$(type-hierarchy)"
+            },
+            {
+                "command": "sdlicit.checkTraceability",
+                "title": "Check Traceability",
+                "category": "Sdlicit",
+                "icon": "$(shield)"
+            },
+            {
+                "command": "sdlicit.showLogs",
+                "title": "Show Server Logs",
+                "category": "Sdlicit",
+                "icon": "$(output)"
+            },
+            {
+                "command": "sdlicit.showOutput",
+                "title": "Show Activity Log",
+                "category": "Sdlicit",
+                "icon": "$(list-flat)"
+            },
+            {
+                "command": "sdlicit.addToKnowledge",
+                "title": "Add File to Knowledge Base",
+                "category": "Sdlicit",
+                "icon": "$(add)"
+            },
+            {
+                "command": "sdlicit.ingestKBFile",
+                "title": "Upload to Knowledge Base",
+                "category": "Sdlicit",
+                "icon": "$(cloud-upload)"
+            },
+            {
+                "command": "sdlicit.ingestAllPending",
+                "title": "Upload All Pending to KB",
+                "category": "Sdlicit",
+                "icon": "$(sync)"
+            },
+            {
+                "command": "sdlicit.uploadArtifactToKB",
+                "title": "Upload Artifact to Knowledge Base",
+                "category": "Sdlicit",
+                "icon": "$(cloud-upload)"
+            },
+            {
+                "command": "sdlicit.openKBFile",
+                "title": "Open Knowledge File",
+                "category": "Sdlicit"
+            },
+            {
+                "command": "sdlicit.deleteArtifact",
+                "title": "Delete Artifact",
+                "category": "Sdlicit",
+                "icon": "$(trash)"
+            },
+            {
+                "command": "sdlicit.acceptPendingArtifact",
+                "title": "Accept Artifact",
+                "category": "Sdlicit",
+                "icon": "$(check)"
+            },
+            {
+                "command": "sdlicit.declinePendingArtifact",
+                "title": "Decline Artifact",
+                "category": "Sdlicit",
+                "icon": "$(close)"
+            },
+            {
+                "command": "sdlicit.regeneratePendingArtifact",
+                "title": "Regenerate Artifact",
+                "category": "Sdlicit",
+                "icon": "$(sync)"
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "sdlicit-sidebar",
+                    "title": "Sdlicit",
+                    "icon": "media/master_sdlicit_icon.svg"
+                }
+            ],
+            "panel": [
+                {
+                    "id": "sdlicit-panel",
+                    "title": "Sdlicit",
+                    "icon": "$(circuit-board)"
+                }
+            ]
+        },
+        "views": {
+            "sdlicit-sidebar": [
+                {
+                    "type": "tree",
+                    "id": "sdlicit.artifacts",
+                    "name": "SDLC Artifacts"
+                },
+                {
+                    "type": "webview",
+                    "id": "sdlicit.dashboard",
+                    "name": "Dashboard"
+                },
+                {
+                    "type": "tree",
+                    "id": "sdlicit.knowledgeBrowser",
+                    "name": "Knowledge Base"
+                },
+                {
+                    "type": "tree",
+                    "id": "sdlicit.sessions",
+                    "name": "Sessions"
+                }
+            ],
+            "sdlicit-panel": [
+                {
+                    "type": "webview",
+                    "id": "sdlicit.chatPanel",
+                    "name": "Sdlicit Chat"
+                },
+                {
+                    "type": "webview",
+                    "id": "sdlicit.statusPanel",
+                    "name": "Status & Tokens"
+                }
+            ]
+        },
+        "menus": {
+            "view/title": [
+                {
+                    "command": "sdlicit.newArtifact",
+                    "when": "view == sdlicit.artifacts",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "sdlicit.guidedFlow",
+                    "when": "view == sdlicit.artifacts",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "sdlicit.refresh",
+                    "when": "view == sdlicit.artifacts",
+                    "group": "navigation@3"
+                },
+                {
+                    "command": "sdlicit.toggleHideAccepted",
+                    "when": "view == sdlicit.artifacts",
+                    "group": "navigation@4"
+                },
+                {
+                    "command": "sdlicit.toggleKBStatus",
+                    "when": "view == sdlicit.artifacts",
+                    "group": "navigation@5"
+                },
+                {
+                    "command": "sdlicit.openTraceGraph",
+                    "when": "view == sdlicit.artifacts",
+                    "group": "navigation@5"
+                },
+                {
+                    "command": "sdlicit.refresh",
+                    "when": "view == sdlicit.sessions",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "sdlicit.compactSession",
+                    "when": "view == sdlicit.sessions",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "sdlicit.showLogs",
+                    "when": "view == sdlicit.statusPanel",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "sdlicit.addToKnowledge",
+                    "when": "view == sdlicit.knowledgeBrowser",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "sdlicit.ingestAllPending",
+                    "when": "view == sdlicit.knowledgeBrowser",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "sdlicit.refresh",
+                    "when": "view == sdlicit.knowledgeBrowser",
+                    "group": "navigation@3"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "sdlicit.deleteSession",
+                    "when": "viewItem == sdlicitSession",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "sdlicit.ingestKBFile",
+                    "when": "viewItem == kbFile.pending || viewItem == kbFile.error",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "sdlicit.uploadArtifactToKB",
+                    "when": "viewItem =~ /^sdlcArtifact\\./",
+                    "group": "inline@1"
+                },
+                {
+                    "command": "sdlicit.deleteArtifact",
+                    "when": "viewItem =~ /^sdlcArtifact\\./",
+                    "group": "inline@2"
+                },
+                {
+                    "command": "sdlicit.generateScenarios",
+                    "when": "viewItem == sdlcArtifact.requirement",
+                    "group": "1_actions@1"
+                },
+                {
+                    "command": "sdlicit.expandADR",
+                    "when": "viewItem == sdlcArtifact.decision",
+                    "group": "1_actions@1"
+                },
+                {
+                    "command": "sdlicit.deleteArtifact",
+                    "when": "viewItem =~ /^sdlcArtifact\\./",
+                    "group": "2_danger@1"
+                }
+            ],
+            "editor/title": [
+                {
+                    "command": "sdlicit.toggleViewMode",
+                    "when": "sdlicit.canvasActive",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "sdlicit.openMarkdownSource",
+                    "when": "sdlicit.canvasActive",
+                    "group": "navigation@2"
+                }
+            ]
+        },
+        "configuration": {
+            "title": "Sdlicit",
+            "properties": {
+                "sdlicit.serverUrl": {
+                    "type": "string",
+                    "default": "http://localhost:8000",
+                    "description": "URL of the Sdlicit backend server."
+                },
+                "sdlicit.autoStartServer": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically start the backend server when the extension activates."
+                },
+                "sdlicit.showCallNotifications": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show a notification message when the backend is being called (in addition to status bar spinner)."
+                },
+                "sdlicit.models.default": {
+                    "type": "string",
+                    "default": "openai/gpt-4o-mini",
+                    "description": "Default LLM model for all stages."
+                },
+                "sdlicit.models.intake": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Model override for Intake stage. Leave empty to use default."
+                },
+                "sdlicit.models.composing": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Model override for Composing stage. Leave empty to use default."
+                },
+                "sdlicit.models.expansion": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Model override for Expansion stage. Leave empty to use default."
+                },
+                "sdlicit.models.generation": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Model override for Generation stage. Leave empty to use default."
+                },
+                "sdlicit.models.socratic": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Model override for Socratic consultation. Leave empty to use default."
+                },
+                "sdlicit.backend.provider": {
+                    "type": "string",
+                    "default": "openrouter",
+                    "enum": [
+                        "openrouter",
+                        "ollama"
+                    ],
+                    "description": "LLM provider (mirrored to backend config.yaml)."
+                },
+                "sdlicit.backend.embedModel": {
+                    "type": "string",
+                    "default": "openai/text-embedding-3-large",
+                    "description": "Embedding model for RAG (mirrored to backend)."
+                },
+                "sdlicit.backend.embedDim": {
+                    "type": "number",
+                    "default": 3072,
+                    "description": "Embedding dimension (mirrored to backend)."
+                },
+                "sdlicit.backend.enableRag": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable RAG knowledge-base grounding."
+                },
+                "sdlicit.backend.enableTom": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable Theory of Mind session tracking."
+                },
+                "sdlicit.backend.tomFocus": {
+                    "type": "string",
+                    "default": "all",
+                    "enum": [
+                        "all",
+                        "scaffolding",
+                        "frustration",
+                        "preferences"
+                    ],
+                    "description": "What the ToM agent focuses on: all aspects, scaffolding level, frustration detection, or user preferences."
+                },
+                "sdlicit.backend.enableSocratic": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enable Socratic judge for quality probes."
+                },
+                "sdlicit.backend.socraticJudgeMode": {
+                    "type": "string",
+                    "default": "hybrid",
+                    "enum": [
+                        "dspy",
+                        "hybrid",
+                        "heuristic"
+                    ],
+                    "description": "Socratic judge mode: dspy (LLM judges), hybrid (heuristic + fallback), heuristic (fast, no hallucination check)."
+                },
+                "sdlicit.backend.socraticMaxTurns": {
+                    "type": "number",
+                    "default": 3,
+                    "minimum": 1,
+                    "maximum": 10,
+                    "description": "Maximum Socratic probe turns before accepting."
+                },
+                "sdlicit.backend.modelContextWindow": {
+                    "type": "number",
+                    "default": 128000,
+                    "description": "Context window size of the model (for compact threshold)."
+                },
+                "sdlicit.backend.compactThresholdPct": {
+                    "type": "number",
+                    "default": 70,
+                    "minimum": 10,
+                    "maximum": 95,
+                    "description": "Percentage of context window before triggering automatic compaction."
+                },
+                "sdlicit.backend.kbWorkingDir": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Working directory for the knowledge base. Leave empty to auto-detect."
+                },
+                "sdlicit.backend.logSessions": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Log session events to .sdlicit/sessions/."
+                }
+            }
+        }
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "lint": "eslint src --ext ts"
+    },
+    "devDependencies": {
+        "@types/node": "^20.10.0",
+        "@types/vscode": "^1.85.0",
+        "@typescript-eslint/eslint-plugin": "^6.13.0",
+        "@typescript-eslint/parser": "^6.13.0",
+        "eslint": "^8.54.0",
+        "typescript": "^5.9.0"
+    },
+    "dependencies": {}
+}

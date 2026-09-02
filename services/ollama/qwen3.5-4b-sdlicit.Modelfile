@@ -1,0 +1,6 @@
+# Sdlicit-tuned Ollama model parameters for qwen3.5:4b
+# Register with: ollama create qwen3.5:4b-sdlicit -f qwen3.5-4b-sdlicit.Modelfile
+FROM qwen3.5:4b
+PARAMETER num_ctx 16384
+PARAMETER num_predict 4096
+PARAMETER temperature 0.1

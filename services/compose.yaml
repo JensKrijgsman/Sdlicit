@@ -1,0 +1,110 @@
+# ---------------------------------------------------------------------------
+# Sdlicit — Development Services
+#
+# Usage:
+#   docker compose -f services/compose.yaml up -d
+#   docker compose -f services/compose.yaml down
+#
+# Services:
+#   sdlicit-db     — Postgres 16 + pgvector + AGE (port 5432)
+#   ollama         — Ollama model server (port 11434, GPU)
+#   lightrag       — LightRAG API server (port 9621)
+# ---------------------------------------------------------------------------
+services:
+  sdlicit-db:
+    container_name: sdlicit_postgres
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: sdlicit
+      POSTGRES_PASSWORD: sdlicit
+      POSTGRES_DB: sdlicit
+    volumes:
+      - sdlicit_pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+    networks:
+      - sdlicit_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sdlicit -d sdlicit"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ollama:
+    container_name: sdlicit_ollama
+    image: ollama/ollama:0.21.0
+    restart: unless-stopped
+    environment:
+      - OLLAMA_KEEP_ALIVE=24h
+    volumes:
+      - sdlicit_ollama:/root/.ollama
+      - ./ollama:/models:ro
+    ports:
+      - "11434:11434"
+    networks:
+      - sdlicit_net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  lightrag:
+    container_name: sdlicit_lightrag
+    build:
+      context: ./lightrag
+      dockerfile: Dockerfile
+    ports:
+      - "9621:9621"
+    volumes:
+      # - ../test/.sdlicit/knowledge/lightrag_workdir:/app/data/rag_storage
+      - ../notebooks/intermediate/nb01/pipeline/.sdlicit/knowledge/lightrag_workdir:/app/data/rag_storage
+
+    environment:
+      # Server
+      - HOST=0.0.0.0
+      - PORT=9621
+      - WORKING_DIR=/app/data/rag_storage
+      # LLM — use Ollama via the internal Docker network
+      - LLM_BINDING=ollama
+      - LLM_BINDING_HOST=http://ollama:11434
+      - LLM_MODEL=qwen3.5:4b-sdlicit
+      - OLLAMA_LLM_NUM_CTX=32768
+      # Embedding
+      # - EMBEDDING_BINDING=ollama
+      # - EMBEDDING_BINDING_HOST=http://ollama:11434
+      # - EMBEDDING_MODEL=nomic-embed-text
+      - EMBEDDING_DIM=3072
+      # - OLLAMA_EMBEDDING_NUM_CTX=2048
+      # Storage — JSON/file-based (matches existing data)
+      - LIGHTRAG_KV_STORAGE=JsonKVStorage
+      - LIGHTRAG_DOC_STATUS_STORAGE=JsonDocStatusStorage
+      - LIGHTRAG_GRAPH_STORAGE=NetworkXStorage
+      - LIGHTRAG_VECTOR_STORAGE=NanoVectorDBStorage
+      - MAX_ASYNC=4
+      - MAX_PARALLEL_INSERT=2
+    depends_on:
+      ollama:
+        condition: service_healthy
+    networks:
+      - sdlicit_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  sdlicit_pgdata:
+  sdlicit_ollama:
+
+networks:
+  sdlicit_net:
+    driver: bridge

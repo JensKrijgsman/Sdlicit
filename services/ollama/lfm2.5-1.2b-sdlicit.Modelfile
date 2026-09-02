@@ -1,0 +1,6 @@
+# Sdlicit-tuned Ollama model parameters for LiquidAI/lfm2.5-1.2b-instruct
+# Register with: ollama create lfm2.5:1.2b-sdlicit -f lfm2.5-1.2b-sdlicit.Modelfile
+FROM LiquidAI/lfm2.5-1.2b-instruct
+PARAMETER num_ctx 16384
+PARAMETER num_predict 4096
+PARAMETER temperature 0.1

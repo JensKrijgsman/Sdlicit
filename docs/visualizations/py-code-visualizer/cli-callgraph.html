@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sdlicit CLI - Code Visualization</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #5D2E8C;
+            --secondary-color: #2962FF;
+            --accent-color: #00C853;
+            --danger-color: #F44336;
+            --warning-color: #FF9800;
+            --text-color: #212121;
+            --text-secondary: #757575;
+            --background-color: #f8f9fa;
+            --card-bg-color: #ffffff;
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0,0,0,0.1);
+            --node-constructor: #E53935;
+            --node-method: #2962FF;
+            --node-function: #00C853;
+            --node-property: #FF6D00;
+            --node-async: #AA00FF;
+            --node-private: #757575;
+            --link-normal: #616161;
+            --link-cycle: #F44336;
+        }
+        body.dark-mode {
+            --primary-color: #9C64FE;
+            --secondary-color: #448AFF;
+            --accent-color: #4CD964;
+            --text-color: #EEEEEE;
+            --text-secondary: #BDBDBD;
+            --background-color: #121212;
+            --card-bg-color: #1E1E1E;
+            --border-color: #333333;
+            --shadow-color: rgba(0,0,0,0.5);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: background-color 0.3s ease;
+        }
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px var(--shadow-color);
+        }
+        .project-title {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .project-title i { margin-right: 0.5rem; }
+        .header-controls { display: flex; gap: 0.75rem; }
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .theme-toggle:hover { background: rgba(255, 255, 255, 0.3); }
+        .layout-container { display: flex; flex: 1; overflow: hidden; }
+        .sidebar {
+            width: 300px;
+            background-color: var(--card-bg-color);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+        .controls-section {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .controls-section h3 {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+        }
+        .controls-section h3 i { margin-right: 0.5rem; }
+        .search-box { position: relative; margin-bottom: 1rem; }
+        .search-box input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            background-color: var(--card-bg-color);
+        }
+        .search-box i {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            background-color: var(--card-bg-color);
+            margin-bottom: 1rem;
+        }
+        .btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-secondary { background-color: var(--secondary-color); color: white; }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .graph-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background-color: var(--card-bg-color);
+        }
+        #graph-svg { width: 100%; height: 100%; }
+        .node { cursor: pointer; }
+        .node circle { stroke-width: 2px; stroke: white; }
+        .node text { font-size: 10px; pointer-events: none; }
+        .link { fill: none; stroke-opacity: 0.6; }
+        .link.cycle { stroke: var(--link-cycle); stroke-dasharray: 5, 5; }
+        .node.highlighted circle { stroke: #FFD700; stroke-width: 4px; }
+        .node.faded { opacity: 0.2; }
+        .link.faded { opacity: 0.1; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+        .stat-item {
+            background-color: var(--background-color);
+            padding: 0.75rem;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-value { font-size: 1.5rem; font-weight: bold; color: var(--primary-color); }
+        .stat-label { font-size: 0.75rem; color: var(--text-secondary); }
+        .legend { padding: 1rem; }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: var(--card-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.75rem;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        .tooltip h4 { margin-bottom: 0.5rem; color: var(--primary-color); }
+        .tooltip p { margin: 0.25rem 0; color: var(--text-secondary); }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="project-title">
+            <i class="fas fa-project-diagram"></i>
+            <span>Sdlicit CLI</span>
+        </div>
+        <div class="header-controls">
+            <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+    <div class="layout-container">
+        <aside class="sidebar">
+            <div class="controls-section">
+                <h3><i class="fas fa-search"></i> Search</h3>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search functions...">
+                </div>
+            </div>
+            <div class="controls-section">
+                <h3><i class="fas fa-filter"></i> Filters</h3>
+                <select id="moduleFilter">
+                    <option value="">All Modules</option>
+                </select>
+                <select id="typeFilter">
+                    <option value="">All Types</option>
+                    <option value="constructor">Constructors</option>
+                    <option value="method">Methods</option>
+                    <option value="function">Functions</option>
+                    <option value="async">Async</option>
+                    <option value="property">Properties</option>
+                    <option value="private">Private</option>
+                </select>
+            </div>
+            <div class="controls-section">
+                <h3><i class="fas fa-chart-bar"></i> Statistics</h3>
+                <div class="stats-grid" id="statsGrid"></div>
+            </div>
+            <div class="controls-section">
+                <h3><i class="fas fa-tools"></i> Controls</h3>
+                <div class="btn-group">
+                    <button class="btn btn-danger" id="highlightCycles">
+                        <i class="fas fa-sync-alt"></i> Cycles
+                    </button>
+                    <button class="btn btn-secondary" id="resetFilters">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                    <button class="btn btn-primary" id="exportSvg">
+                        <i class="fas fa-download"></i> SVG
+                    </button>
+                </div>
+            </div>
+            <div class="legend">
+                <h3><i class="fas fa-palette"></i> Legend</h3>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: var(--node-constructor);"></span>
+                    Constructor
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: var(--node-method);"></span>
+                    Method
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: var(--node-function);"></span>
+                    Function
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: var(--node-async);"></span>
+                    Async
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: var(--node-property);"></span>
+                    Property
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: var(--node-private);"></span>
+                    Private
+                </div>
+            </div>
+        </aside>
+        <div class="graph-container" id="graphContainer">
+            <svg id="graph-svg"></svg>
+        </div>
+    </div>
+    <div class="tooltip" id="tooltip" style="display: none;"></div>
+    
+    <script>
+        const graphData = {"nodes": [{"id": "stages.composing.list_adrs.action_list_adrs", "name": "action_list_adrs", "module": "stages.composing.list_adrs", "class": null, "type": "function", "is_async": false, "lineno": 14, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/list_adrs.py"}, {"id": "stages.expansion.__init__.menu_entries", "name": "menu_entries", "module": "stages.expansion.__init__", "class": null, "type": "function", "is_async": false, "lineno": 19, "path": "/home/jens/Master/Sdlicit/cli/stages/expansion/__init__.py"}, {"id": "stages.expansion.query_kb._show_kb_sources", "name": "_show_kb_sources", "module": "stages.expansion.query_kb", "class": null, "type": "private", "is_async": false, "lineno": 18, "path": "/home/jens/Master/Sdlicit/cli/stages/expansion/query_kb.py"}, {"id": "stages.expansion.query_kb.action_query_kb", "name": "action_query_kb", "module": "stages.expansion.query_kb", "class": null, "type": "function", "is_async": false, "lineno": 56, "path": "/home/jens/Master/Sdlicit/cli/stages/expansion/query_kb.py"}, {"id": "shared.parsers.parse_madr_content", "name": "parse_madr_content", "module": "shared.parsers", "class": null, "type": "function", "is_async": false, "lineno": 13, "path": "/home/jens/Master/Sdlicit/cli/shared/parsers.py"}, {"id": "stages.composing.view_adr._bullet_lines", "name": "_bullet_lines", "module": "stages.composing.view_adr", "class": null, "type": "private", "is_async": false, "lineno": 30, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/view_adr.py"}, {"id": "stages.composing.view_adr._render_adr", "name": "_render_adr", "module": "stages.composing.view_adr", "class": null, "type": "private", "is_async": false, "lineno": 44, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/view_adr.py"}, {"id": "stages.composing.view_adr.action_view_adr", "name": "action_view_adr", "module": "stages.composing.view_adr", "class": null, "type": "function", "is_async": false, "lineno": 173, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/view_adr.py"}, {"id": "stages.expansion.expand_adr.action_expand_adr", "name": "action_expand_adr", "module": "stages.expansion.expand_adr", "class": null, "type": "function", "is_async": false, "lineno": 28, "path": "/home/jens/Master/Sdlicit/cli/stages/expansion/expand_adr.py"}, {"id": "stages.generation.generate_gherkin.action_generate_gherkin", "name": "action_generate_gherkin", "module": "stages.generation.generate_gherkin", "class": null, "type": "function", "is_async": false, "lineno": 22, "path": "/home/jens/Master/Sdlicit/cli/stages/generation/generate_gherkin.py"}, {"id": "stages.generation.generate_stories.action_generate_stories", "name": "action_generate_stories", "module": "stages.generation.generate_stories", "class": null, "type": "function", "is_async": false, "lineno": 23, "path": "/home/jens/Master/Sdlicit/cli/stages/generation/generate_stories.py"}, {"id": "shared.files.sdlicit_root", "name": "sdlicit_root", "module": "shared.files", "class": null, "type": "function", "is_async": false, "lineno": 45, "path": "/home/jens/Master/Sdlicit/cli/shared/files.py"}, {"id": "shared.files.adr_dir", "name": "adr_dir", "module": "shared.files", "class": null, "type": "function", "is_async": false, "lineno": 50, "path": "/home/jens/Master/Sdlicit/cli/shared/files.py"}, {"id": "shared.files.sessions_path", "name": "sessions_path", "module": "shared.files", "class": null, "type": "function", "is_async": false, "lineno": 54, "path": "/home/jens/Master/Sdlicit/cli/shared/files.py"}, {"id": "shared.files.list_adr_files", "name": "list_adr_files", "module": "shared.files", "class": null, "type": "function", "is_async": false, "lineno": 61, "path": "/home/jens/Master/Sdlicit/cli/shared/files.py"}, {"id": "shared.files.write_adr", "name": "write_adr", "module": "shared.files", "class": null, "type": "function", "is_async": false, "lineno": 81, "path": "/home/jens/Master/Sdlicit/cli/shared/files.py"}, {"id": "shared.files.read_adr", "name": "read_adr", "module": "shared.files", "class": null, "type": "function", "is_async": false, "lineno": 90, "path": "/home/jens/Master/Sdlicit/cli/shared/files.py"}, {"id": "shared.files.artifacts_dir", "name": "artifacts_dir", "module": "shared.files", "class": null, "type": "function", "is_async": false, "lineno": 98, "path": "/home/jens/Master/Sdlicit/cli/shared/files.py"}, {"id": "shared.files.write_sow", "name": "write_sow", "module": "shared.files", "class": null, "type": "function", "is_async": false, "lineno": 102, "path": "/home/jens/Master/Sdlicit/cli/shared/files.py"}, {"id": "cli_client._clear", "name": "_clear", "module": "cli_client", "class": null, "type": "private", "is_async": false, "lineno": 36, "path": "/home/jens/Master/Sdlicit/cli/cli_client.py"}, {"id": "cli_client._draw_header", "name": "_draw_header", "module": "cli_client", "class": null, "type": "private", "is_async": false, "lineno": 41, "path": "/home/jens/Master/Sdlicit/cli/cli_client.py"}, {"id": "cli_client._build_menu", "name": "_build_menu", "module": "cli_client", "class": null, "type": "private", "is_async": false, "lineno": 72, "path": "/home/jens/Master/Sdlicit/cli/cli_client.py"}, {"id": "cli_client._draw_menu", "name": "_draw_menu", "module": "cli_client", "class": null, "type": "private", "is_async": false, "lineno": 90, "path": "/home/jens/Master/Sdlicit/cli/cli_client.py"}, {"id": "cli_client.main", "name": "main", "module": "cli_client", "class": null, "type": "function", "is_async": false, "lineno": 110, "path": "/home/jens/Master/Sdlicit/cli/cli_client.py"}, {"id": "stages.generation.generate_personas.action_generate_personas", "name": "action_generate_personas", "module": "stages.generation.generate_personas", "class": null, "type": "function", "is_async": false, "lineno": 24, "path": "/home/jens/Master/Sdlicit/cli/stages/generation/generate_personas.py"}, {"id": "stages.intake.create_sow._render_probe", "name": "_render_probe", "module": "stages.intake.create_sow", "class": null, "type": "private", "is_async": false, "lineno": 27, "path": "/home/jens/Master/Sdlicit/cli/stages/intake/create_sow.py"}, {"id": "stages.intake.create_sow._ask_probe_answer", "name": "_ask_probe_answer", "module": "stages.intake.create_sow", "class": null, "type": "private", "is_async": false, "lineno": 49, "path": "/home/jens/Master/Sdlicit/cli/stages/intake/create_sow.py"}, {"id": "stages.intake.create_sow.action_create_sow", "name": "action_create_sow", "module": "stages.intake.create_sow", "class": null, "type": "function", "is_async": false, "lineno": 60, "path": "/home/jens/Master/Sdlicit/cli/stages/intake/create_sow.py"}, {"id": "stages.expansion.ingest_kb._size_str", "name": "_size_str", "module": "stages.expansion.ingest_kb", "class": null, "type": "private", "is_async": false, "lineno": 42, "path": "/home/jens/Master/Sdlicit/cli/stages/expansion/ingest_kb.py"}, {"id": "stages.expansion.ingest_kb._show_doc_table", "name": "_show_doc_table", "module": "stages.expansion.ingest_kb", "class": null, "type": "private", "is_async": false, "lineno": 48, "path": "/home/jens/Master/Sdlicit/cli/stages/expansion/ingest_kb.py"}, {"id": "stages.expansion.ingest_kb._clear", "name": "_clear", "module": "stages.expansion.ingest_kb", "class": null, "type": "private", "is_async": false, "lineno": 106, "path": "/home/jens/Master/Sdlicit/cli/stages/expansion/ingest_kb.py"}, {"id": "stages.expansion.ingest_kb._select_some", "name": "_select_some", "module": "stages.expansion.ingest_kb", "class": null, "type": "private", "is_async": false, "lineno": 110, "path": "/home/jens/Master/Sdlicit/cli/stages/expansion/ingest_kb.py"}, {"id": "stages.expansion.ingest_kb.action_ingest_kb", "name": "action_ingest_kb", "module": "stages.expansion.ingest_kb", "class": null, "type": "function", "is_async": false, "lineno": 168, "path": "/home/jens/Master/Sdlicit/cli/stages/expansion/ingest_kb.py"}, {"id": "stages.expansion.ingest_kb._redraw", "name": "_redraw", "module": "stages.expansion.ingest_kb", "class": null, "type": "private", "is_async": false, "lineno": 118, "path": "/home/jens/Master/Sdlicit/cli/stages/expansion/ingest_kb.py"}, {"id": "stages.composing.__init__.menu_entries", "name": "menu_entries", "module": "stages.composing.__init__", "class": null, "type": "function", "is_async": false, "lineno": 19, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/__init__.py"}, {"id": "api_client.SdlicitClient.__init__", "name": "__init__", "module": "api_client", "class": "api_client.SdlicitClient", "type": "constructor", "is_async": false, "lineno": 20, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.server_url", "name": "server_url", "module": "api_client", "class": "api_client.SdlicitClient", "type": "property", "is_async": false, "lineno": 24, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.health", "name": "health", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 30, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.init_project", "name": "init_project", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 38, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.get_config", "name": "get_config", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 48, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.start_session", "name": "start_session", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 56, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.end_session", "name": "end_session", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 66, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.create_sow", "name": "create_sow", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 77, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.step_event", "name": "step_event", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 96, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.analyse_input", "name": "analyse_input", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 119, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.expand_adr", "name": "expand_adr", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 133, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.query_kb", "name": "query_kb", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 152, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.ingest_kb", "name": "ingest_kb", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 163, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.scan_documents", "name": "scan_documents", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 188, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.kb_status", "name": "kb_status", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 198, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.generate_personas", "name": "generate_personas", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 211, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.generate_gherkin", "name": "generate_gherkin", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 225, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.SdlicitClient.generate_stories", "name": "generate_stories", "module": "api_client", "class": "api_client.SdlicitClient", "type": "method", "is_async": false, "lineno": 244, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.__init__", "name": "__init__", "module": "api_client", "class": null, "type": "constructor", "is_async": false, "lineno": 20, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.server_url", "name": "server_url", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 24, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.health", "name": "health", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 30, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.init_project", "name": "init_project", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 38, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.get_config", "name": "get_config", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 48, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.start_session", "name": "start_session", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 56, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.end_session", "name": "end_session", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 66, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.create_sow", "name": "create_sow", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 77, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.step_event", "name": "step_event", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 96, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.analyse_input", "name": "analyse_input", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 119, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.expand_adr", "name": "expand_adr", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 133, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.query_kb", "name": "query_kb", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 152, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.ingest_kb", "name": "ingest_kb", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 163, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.scan_documents", "name": "scan_documents", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 188, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.kb_status", "name": "kb_status", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 198, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.generate_personas", "name": "generate_personas", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 211, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.generate_gherkin", "name": "generate_gherkin", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 225, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "api_client.generate_stories", "name": "generate_stories", "module": "api_client", "class": null, "type": "function", "is_async": false, "lineno": 244, "path": "/home/jens/Master/Sdlicit/cli/api_client.py"}, {"id": "stages.generation.__init__.menu_entries", "name": "menu_entries", "module": "stages.generation.__init__", "class": null, "type": "function", "is_async": false, "lineno": 19, "path": "/home/jens/Master/Sdlicit/cli/stages/generation/__init__.py"}, {"id": "stages.composing.create_adr._ask", "name": "_ask", "module": "stages.composing.create_adr", "class": null, "type": "private", "is_async": false, "lineno": 94, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._confirm", "name": "_confirm", "module": "stages.composing.create_adr", "class": null, "type": "private", "is_async": false, "lineno": 119, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ask_list", "name": "_ask_list", "module": "stages.composing.create_adr", "class": null, "type": "private", "is_async": false, "lineno": 135, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession.__init__", "name": "__init__", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "constructor", "is_async": false, "lineno": 160, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession.render", "name": "render", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "method", "is_async": false, "lineno": 180, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession._build_left", "name": "_build_left", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "private", "is_async": false, "lineno": 191, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession._build_right", "name": "_build_right", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "private", "is_async": false, "lineno": 215, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession.set_hint", "name": "set_hint", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "method", "is_async": false, "lineno": 260, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession.clear_hint", "name": "clear_hint", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "method", "is_async": false, "lineno": 264, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession.add_log", "name": "add_log", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "method", "is_async": false, "lineno": 268, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession.pop_log", "name": "pop_log", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "method", "is_async": false, "lineno": 273, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession.fire", "name": "fire", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "method", "is_async": false, "lineno": 280, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession._fetch", "name": "_fetch", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "private", "is_async": false, "lineno": 291, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession.wait_for_latest", "name": "wait_for_latest", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "method", "is_async": false, "lineno": 353, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession.drain", "name": "drain", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "method", "is_async": false, "lineno": 360, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession.take_pending_probe", "name": "take_pending_probe", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "method", "is_async": false, "lineno": 368, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession.add_clarification", "name": "add_clarification", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "method", "is_async": false, "lineno": 376, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ADRSession.replay_step_sync", "name": "replay_step_sync", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ADRSession", "type": "method", "is_async": false, "lineno": 384, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._render_probe", "name": "_render_probe", "module": "stages.composing.create_adr", "class": null, "type": "private", "is_async": false, "lineno": 435, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._drain_probes", "name": "_drain_probes", "module": "stages.composing.create_adr", "class": null, "type": "private", "is_async": false, "lineno": 455, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._Step.run", "name": "run", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._Step", "type": "method", "is_async": false, "lineno": 510, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._Step.undo", "name": "undo", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._Step", "type": "method", "is_async": false, "lineno": 513, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._FieldStep.__init__", "name": "__init__", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._FieldStep", "type": "constructor", "is_async": false, "lineno": 525, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._FieldStep.run", "name": "run", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._FieldStep", "type": "method", "is_async": false, "lineno": 543, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ListStep.__init__", "name": "__init__", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ListStep", "type": "constructor", "is_async": false, "lineno": 561, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ListStep.run", "name": "run", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ListStep", "type": "method", "is_async": false, "lineno": 570, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ChosenOptionStep.__init__", "name": "__init__", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ChosenOptionStep", "type": "constructor", "is_async": false, "lineno": 593, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ChosenOptionStep.run", "name": "run", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ChosenOptionStep", "type": "method", "is_async": false, "lineno": 596, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ConseqStep.__init__", "name": "__init__", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ConseqStep", "type": "constructor", "is_async": false, "lineno": 619, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ConseqStep.run", "name": "run", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ConseqStep", "type": "method", "is_async": false, "lineno": 622, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._ConseqStep.undo", "name": "undo", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._ConseqStep", "type": "method", "is_async": false, "lineno": 663, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._FrontmatterStep.__init__", "name": "__init__", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._FrontmatterStep", "type": "constructor", "is_async": false, "lineno": 676, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._FrontmatterStep.run", "name": "run", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._FrontmatterStep", "type": "method", "is_async": false, "lineno": 679, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._FrontmatterStep.undo", "name": "undo", "module": "stages.composing.create_adr", "class": "stages.composing.create_adr._FrontmatterStep", "type": "method", "is_async": false, "lineno": 706, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._common_steps", "name": "_common_steps", "module": "stages.composing.create_adr", "class": null, "type": "private", "is_async": false, "lineno": 716, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._minimal_steps", "name": "_minimal_steps", "module": "stages.composing.create_adr", "class": null, "type": "private", "is_async": false, "lineno": 730, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._full_steps", "name": "_full_steps", "module": "stages.composing.create_adr", "class": null, "type": "private", "is_async": false, "lineno": 748, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._select_template", "name": "_select_template", "module": "stages.composing.create_adr", "class": null, "type": "private", "is_async": false, "lineno": 771, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._run_wizard", "name": "_run_wizard", "module": "stages.composing.create_adr", "class": null, "type": "private", "is_async": false, "lineno": 790, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.action_create_adr", "name": "action_create_adr", "module": "stages.composing.create_adr", "class": null, "type": "function", "is_async": false, "lineno": 819, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.__init__", "name": "__init__", "module": "stages.composing.create_adr", "class": null, "type": "constructor", "is_async": false, "lineno": 676, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.render", "name": "render", "module": "stages.composing.create_adr", "class": null, "type": "function", "is_async": false, "lineno": 180, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._build_left", "name": "_build_left", "module": "stages.composing.create_adr", "class": null, "type": "private", "is_async": false, "lineno": 191, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._build_right", "name": "_build_right", "module": "stages.composing.create_adr", "class": null, "type": "private", "is_async": false, "lineno": 215, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.set_hint", "name": "set_hint", "module": "stages.composing.create_adr", "class": null, "type": "function", "is_async": false, "lineno": 260, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.clear_hint", "name": "clear_hint", "module": "stages.composing.create_adr", "class": null, "type": "function", "is_async": false, "lineno": 264, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.add_log", "name": "add_log", "module": "stages.composing.create_adr", "class": null, "type": "function", "is_async": false, "lineno": 268, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.pop_log", "name": "pop_log", "module": "stages.composing.create_adr", "class": null, "type": "function", "is_async": false, "lineno": 273, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.fire", "name": "fire", "module": "stages.composing.create_adr", "class": null, "type": "function", "is_async": false, "lineno": 280, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr._fetch", "name": "_fetch", "module": "stages.composing.create_adr", "class": null, "type": "private", "is_async": false, "lineno": 291, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.wait_for_latest", "name": "wait_for_latest", "module": "stages.composing.create_adr", "class": null, "type": "function", "is_async": false, "lineno": 353, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.drain", "name": "drain", "module": "stages.composing.create_adr", "class": null, "type": "function", "is_async": false, "lineno": 360, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.take_pending_probe", "name": "take_pending_probe", "module": "stages.composing.create_adr", "class": null, "type": "function", "is_async": false, "lineno": 368, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.add_clarification", "name": "add_clarification", "module": "stages.composing.create_adr", "class": null, "type": "function", "is_async": false, "lineno": 376, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.replay_step_sync", "name": "replay_step_sync", "module": "stages.composing.create_adr", "class": null, "type": "function", "is_async": false, "lineno": 384, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.run", "name": "run", "module": "stages.composing.create_adr", "class": null, "type": "function", "is_async": false, "lineno": 679, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.composing.create_adr.undo", "name": "undo", "module": "stages.composing.create_adr", "class": null, "type": "function", "is_async": false, "lineno": 706, "path": "/home/jens/Master/Sdlicit/cli/stages/composing/create_adr.py"}, {"id": "stages.intake.__init__.menu_entries", "name": "menu_entries", "module": "stages.intake.__init__", "class": null, "type": "function", "is_async": false, "lineno": 16, "path": "/home/jens/Master/Sdlicit/cli/stages/intake/__init__.py"}, {"id": "shared.madr._slugify", "name": "_slugify", "module": "shared.madr", "class": null, "type": "private", "is_async": false, "lineno": 52, "path": "/home/jens/Master/Sdlicit/cli/shared/madr.py"}, {"id": "shared.madr._next_sequence", "name": "_next_sequence", "module": "shared.madr", "class": null, "type": "private", "is_async": false, "lineno": 58, "path": "/home/jens/Master/Sdlicit/cli/shared/madr.py"}, {"id": "shared.madr._today", "name": "_today", "module": "shared.madr", "class": null, "type": "private", "is_async": false, "lineno": 67, "path": "/home/jens/Master/Sdlicit/cli/shared/madr.py"}, {"id": "shared.madr._render_minimal", "name": "_render_minimal", "module": "shared.madr", "class": null, "type": "private", "is_async": false, "lineno": 76, "path": "/home/jens/Master/Sdlicit/cli/shared/madr.py"}, {"id": "shared.madr._render_full", "name": "_render_full", "module": "shared.madr", "class": null, "type": "private", "is_async": false, "lineno": 115, "path": "/home/jens/Master/Sdlicit/cli/shared/madr.py"}, {"id": "shared.madr._render_bare", "name": "_render_bare", "module": "shared.madr", "class": null, "type": "private", "is_async": false, "lineno": 179, "path": "/home/jens/Master/Sdlicit/cli/shared/madr.py"}, {"id": "shared.madr.render_madr", "name": "render_madr", "module": "shared.madr", "class": null, "type": "function", "is_async": false, "lineno": 221, "path": "/home/jens/Master/Sdlicit/cli/shared/madr.py"}], "links": [{"source": "stages.composing.list_adrs.action_list_adrs", "target": "shared.files.list_adr_files", "is_cycle": false, "lineno": 16}, {"source": "stages.composing.list_adrs.action_list_adrs", "target": "shared.files.adr_dir", "is_cycle": false, "lineno": 17}, {"source": "stages.expansion.__init__.menu_entries", "target": "stages.expansion.expand_adr.action_expand_adr", "is_cycle": false, "lineno": 27}, {"source": "stages.expansion.__init__.menu_entries", "target": "stages.expansion.ingest_kb.action_ingest_kb", "is_cycle": false, "lineno": 33}, {"source": "stages.expansion.__init__.menu_entries", "target": "stages.expansion.query_kb.action_query_kb", "is_cycle": false, "lineno": 39}, {"source": "stages.expansion.query_kb.action_query_kb", "target": "stages.expansion.query_kb._show_kb_sources", "is_cycle": false, "lineno": 70}, {"source": "stages.composing.view_adr._render_adr", "target": "shared.parsers.parse_madr_content", "is_cycle": false, "lineno": 46}, {"source": "stages.composing.view_adr._render_adr", "target": "stages.composing.view_adr._bullet_lines", "is_cycle": false, "lineno": 105}, {"source": "stages.composing.view_adr.action_view_adr", "target": "shared.files.list_adr_files", "is_cycle": false, "lineno": 175}, {"source": "stages.composing.view_adr.action_view_adr", "target": "shared.files.adr_dir", "is_cycle": false, "lineno": 179}, {"source": "stages.composing.view_adr.action_view_adr", "target": "shared.files.read_adr", "is_cycle": false, "lineno": 198}, {"source": "stages.composing.view_adr.action_view_adr", "target": "stages.composing.view_adr._render_adr", "is_cycle": false, "lineno": 203}, {"source": "stages.expansion.expand_adr.action_expand_adr", "target": "shared.files.list_adr_files", "is_cycle": false, "lineno": 30}, {"source": "stages.generation.generate_stories.action_generate_stories", "target": "shared.files.list_adr_files", "is_cycle": false, "lineno": 24}, {"source": "shared.files.list_adr_files", "target": "shared.files.adr_dir", "is_cycle": false, "lineno": 63}, {"source": "shared.files.write_adr", "target": "shared.files.adr_dir", "is_cycle": false, "lineno": 83}, {"source": "shared.files.write_sow", "target": "shared.files.artifacts_dir", "is_cycle": false, "lineno": 104}, {"source": "cli_client.main", "target": "cli_client._clear", "is_cycle": false, "lineno": 201}, {"source": "cli_client.main", "target": "api_client.SdlicitClient.health", "is_cycle": false, "lineno": 138}, {"source": "cli_client.main", "target": "api_client.SdlicitClient.init_project", "is_cycle": false, "lineno": 148}, {"source": "cli_client.main", "target": "api_client.SdlicitClient.get_config", "is_cycle": false, "lineno": 158}, {"source": "cli_client.main", "target": "cli_client._draw_header", "is_cycle": false, "lineno": 202}, {"source": "cli_client.main", "target": "api_client.SdlicitClient.start_session", "is_cycle": false, "lineno": 168}, {"source": "cli_client.main", "target": "cli_client._build_menu", "is_cycle": false, "lineno": 174}, {"source": "cli_client.main", "target": "cli_client._draw_menu", "is_cycle": false, "lineno": 177}, {"source": "cli_client.main", "target": "api_client.SdlicitClient.end_session", "is_cycle": false, "lineno": 185}, {"source": "stages.generation.generate_personas.action_generate_personas", "target": "shared.files.list_adr_files", "is_cycle": false, "lineno": 26}, {"source": "stages.intake.create_sow.action_create_sow", "target": "stages.intake.create_sow._render_probe", "is_cycle": false, "lineno": 104}, {"source": "stages.expansion.ingest_kb._show_doc_table", "target": "stages.expansion.ingest_kb._size_str", "is_cycle": false, "lineno": 66}, {"source": "stages.expansion.ingest_kb._select_some", "target": "stages.expansion.ingest_kb._redraw", "is_cycle": false, "lineno": 160}, {"source": "stages.expansion.ingest_kb.action_ingest_kb", "target": "stages.expansion.ingest_kb._show_doc_table", "is_cycle": false, "lineno": 207}, {"source": "stages.expansion.ingest_kb.action_ingest_kb", "target": "stages.expansion.ingest_kb._select_some", "is_cycle": false, "lineno": 230}, {"source": "stages.expansion.ingest_kb._redraw", "target": "stages.expansion.ingest_kb._clear", "is_cycle": false, "lineno": 119}, {"source": "stages.expansion.ingest_kb._redraw", "target": "stages.expansion.ingest_kb._show_doc_table", "is_cycle": false, "lineno": 121}, {"source": "stages.composing.__init__.menu_entries", "target": "stages.composing.create_adr.action_create_adr", "is_cycle": false, "lineno": 28}, {"source": "stages.composing.__init__.menu_entries", "target": "stages.composing.list_adrs.action_list_adrs", "is_cycle": false, "lineno": 34}, {"source": "stages.composing.__init__.menu_entries", "target": "stages.composing.view_adr.action_view_adr", "is_cycle": false, "lineno": 40}, {"source": "stages.generation.__init__.menu_entries", "target": "stages.generation.generate_personas.action_generate_personas", "is_cycle": false, "lineno": 27}, {"source": "stages.generation.__init__.menu_entries", "target": "stages.generation.generate_stories.action_generate_stories", "is_cycle": false, "lineno": 33}, {"source": "stages.generation.__init__.menu_entries", "target": "stages.generation.generate_gherkin.action_generate_gherkin", "is_cycle": false, "lineno": 39}, {"source": "stages.composing.create_adr._ADRSession.render", "target": "stages.composing.create_adr._ADRSession._build_left", "is_cycle": false, "lineno": 187}, {"source": "stages.composing.create_adr._ADRSession.render", "target": "stages.composing.create_adr._ADRSession._build_right", "is_cycle": false, "lineno": 187}, {"source": "stages.composing.create_adr._ADRSession._fetch", "target": "api_client.SdlicitClient.step_event", "is_cycle": false, "lineno": 295}, {"source": "stages.composing.create_adr._ADRSession.replay_step_sync", "target": "api_client.SdlicitClient.step_event", "is_cycle": false, "lineno": 394}, {"source": "stages.composing.create_adr._drain_probes", "target": "stages.composing.create_adr._render_probe", "is_cycle": false, "lineno": 469}, {"source": "stages.composing.create_adr._FieldStep.run", "target": "stages.composing.create_adr._ask", "is_cycle": false, "lineno": 546}, {"source": "stages.composing.create_adr._ListStep.run", "target": "stages.composing.create_adr._ask_list", "is_cycle": false, "lineno": 573}, {"source": "stages.composing.create_adr._ChosenOptionStep.run", "target": "stages.composing.create_adr._ask", "is_cycle": false, "lineno": 602}, {"source": "stages.composing.create_adr._ConseqStep.run", "target": "stages.composing.create_adr._confirm", "is_cycle": false, "lineno": 625}, {"source": "stages.composing.create_adr._FrontmatterStep.run", "target": "stages.composing.create_adr._ask", "is_cycle": false, "lineno": 689}, {"source": "stages.composing.create_adr._run_wizard", "target": "stages.composing.create_adr._drain_probes", "is_cycle": false, "lineno": 801}, {"source": "stages.composing.create_adr.action_create_adr", "target": "shared.files.list_adr_files", "is_cycle": false, "lineno": 827}, {"source": "stages.composing.create_adr.action_create_adr", "target": "stages.composing.create_adr._select_template", "is_cycle": false, "lineno": 831}, {"source": "stages.composing.create_adr.action_create_adr", "target": "stages.composing.create_adr._common_steps", "is_cycle": false, "lineno": 835}, {"source": "stages.composing.create_adr.action_create_adr", "target": "stages.composing.create_adr._minimal_steps", "is_cycle": false, "lineno": 837}, {"source": "stages.composing.create_adr.action_create_adr", "target": "stages.composing.create_adr._full_steps", "is_cycle": false, "lineno": 839}, {"source": "stages.composing.create_adr.action_create_adr", "target": "stages.composing.create_adr._run_wizard", "is_cycle": false, "lineno": 842}, {"source": "stages.composing.create_adr.action_create_adr", "target": "stages.composing.create_adr._ADRSession.drain", "is_cycle": false, "lineno": 845}, {"source": "stages.composing.create_adr.action_create_adr", "target": "stages.composing.create_adr._drain_probes", "is_cycle": false, "lineno": 846}, {"source": "stages.composing.create_adr.action_create_adr", "target": "stages.composing.create_adr._ADRSession.clear_hint", "is_cycle": false, "lineno": 847}, {"source": "stages.composing.create_adr.action_create_adr", "target": "stages.composing.create_adr._ADRSession.render", "is_cycle": false, "lineno": 848}, {"source": "stages.composing.create_adr.action_create_adr", "target": "shared.madr.render_madr", "is_cycle": false, "lineno": 853}, {"source": "stages.composing.create_adr.action_create_adr", "target": "shared.files.write_adr", "is_cycle": false, "lineno": 858}, {"source": "stages.intake.__init__.menu_entries", "target": "stages.intake.create_sow.action_create_sow", "is_cycle": false, "lineno": 24}, {"source": "shared.madr._render_minimal", "target": "shared.madr._today", "is_cycle": false, "lineno": 80}, {"source": "shared.madr._render_full", "target": "shared.madr._today", "is_cycle": false, "lineno": 119}, {"source": "shared.madr.render_madr", "target": "shared.madr._next_sequence", "is_cycle": false, "lineno": 223}, {"source": "shared.madr.render_madr", "target": "shared.madr._slugify", "is_cycle": false, "lineno": 225}], "cycles": [], "stats": {"total_nodes": 137, "total_edges": 68, "total_modules": 19, "total_classes": 8, "total_cycles": 0}};
+        
+        // Color mapping
+        const nodeColors = {
+            constructor: '#E53935',
+            method: '#2962FF',
+            function: '#00C853',
+            async: '#AA00FF',
+            property: '#FF6D00',
+            private: '#757575',
+            static: '#00B0FF'
+        };
+        
+        // Setup SVG
+        const container = document.getElementById('graphContainer');
+        const svg = d3.select('#graph-svg');
+        const width = container.clientWidth;
+        const height = container.clientHeight;
+        
+        svg.attr('width', width).attr('height', height);
+        
+        // Create zoom behavior
+        const zoom = d3.zoom()
+            .scaleExtent([0.1, 4])
+            .on('zoom', (event) => g.attr('transform', event.transform));
+        
+        svg.call(zoom);
+        
+        const g = svg.append('g');
+        
+        // Create arrow marker for links
+        svg.append('defs').append('marker')
+            .attr('id', 'arrowhead')
+            .attr('viewBox', '-0 -5 10 10')
+            .attr('refX', 20)
+            .attr('refY', 0)
+            .attr('orient', 'auto')
+            .attr('markerWidth', 6)
+            .attr('markerHeight', 6)
+            .append('path')
+            .attr('d', 'M 0,-5 L 10,0 L 0,5')
+            .attr('fill', '#616161');
+        
+        // Create simulation
+        const simulation = d3.forceSimulation(graphData.nodes)
+            .force('link', d3.forceLink(graphData.links).id(d => d.id).distance(100))
+            .force('charge', d3.forceManyBody().strength(-300))
+            .force('center', d3.forceCenter(width / 2, height / 2))
+            .force('collision', d3.forceCollide().radius(30));
+        
+        // Create links
+        const link = g.append('g')
+            .selectAll('line')
+            .data(graphData.links)
+            .join('line')
+            .attr('class', d => d.is_cycle ? 'link cycle' : 'link')
+            .attr('stroke', d => d.is_cycle ? '#F44336' : '#616161')
+            .attr('stroke-width', 1.5)
+            .attr('marker-end', 'url(#arrowhead)');
+        
+        // Create nodes
+        const node = g.append('g')
+            .selectAll('g')
+            .data(graphData.nodes)
+            .join('g')
+            .attr('class', 'node')
+            .call(d3.drag()
+                .on('start', dragstarted)
+                .on('drag', dragged)
+                .on('end', dragended));
+        
+        node.append('circle')
+            .attr('r', 12)
+            .attr('fill', d => nodeColors[d.type] || nodeColors.function);
+        
+        node.append('text')
+            .attr('dx', 15)
+            .attr('dy', 4)
+            .text(d => d.name)
+            .attr('fill', 'var(--text-color)');
+        
+        // Tooltip
+        const tooltip = document.getElementById('tooltip');
+        
+        node.on('mouseover', (event, d) => {
+            tooltip.innerHTML = `
+                <h4>${d.name}</h4>
+                <p><strong>Module:</strong> ${d.module}</p>
+                ${d.class ? `<p><strong>Class:</strong> ${d.class.split('.').pop()}</p>` : ''}
+                <p><strong>Type:</strong> ${d.type}</p>
+                <p><strong>Line:</strong> ${d.lineno}</p>
+            `;
+            tooltip.style.display = 'block';
+            tooltip.style.left = (event.pageX + 10) + 'px';
+            tooltip.style.top = (event.pageY - 10) + 'px';
+        })
+        .on('mouseout', () => tooltip.style.display = 'none');
+        
+        // Simulation tick
+        simulation.on('tick', () => {
+            link.attr('x1', d => d.source.x)
+                .attr('y1', d => d.source.y)
+                .attr('x2', d => d.target.x)
+                .attr('y2', d => d.target.y);
+            
+            node.attr('transform', d => `translate(${d.x},${d.y})`);
+        });
+        
+        // Drag functions
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+        
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+        
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+        
+        // Populate filters
+        const modules = [...new Set(graphData.nodes.map(n => n.module))].sort();
+        const moduleFilter = document.getElementById('moduleFilter');
+        modules.forEach(m => {
+            const option = document.createElement('option');
+            option.value = m;
+            option.textContent = m;
+            moduleFilter.appendChild(option);
+        });
+        
+        // Populate stats
+        const statsGrid = document.getElementById('statsGrid');
+        const stats = graphData.stats;
+        statsGrid.innerHTML = `
+            <div class="stat-item">
+                <div class="stat-value">${stats.total_nodes}</div>
+                <div class="stat-label">Functions</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">${stats.total_edges}</div>
+                <div class="stat-label">Calls</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">${stats.total_modules}</div>
+                <div class="stat-label">Modules</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">${stats.total_cycles}</div>
+                <div class="stat-label">Cycles</div>
+            </div>
+        `;
+        
+        // Filter functionality
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const moduleValue = moduleFilter.value;
+            const typeValue = document.getElementById('typeFilter').value;
+            
+            node.classed('faded', d => {
+                const matchSearch = !searchTerm || d.name.toLowerCase().includes(searchTerm) || d.id.toLowerCase().includes(searchTerm);
+                const matchModule = !moduleValue || d.module === moduleValue;
+                const matchType = !typeValue || d.type === typeValue;
+                return !(matchSearch && matchModule && matchType);
+            });
+            
+            link.classed('faded', d => {
+                const sourceNode = graphData.nodes.find(n => n.id === d.source.id || n.id === d.source);
+                const targetNode = graphData.nodes.find(n => n.id === d.target.id || n.id === d.target);
+                const sourceVisible = sourceNode && !node.filter(n => n.id === sourceNode.id).classed('faded');
+                const targetVisible = targetNode && !node.filter(n => n.id === targetNode.id).classed('faded');
+                return !(sourceVisible && targetVisible);
+            });
+        }
+        
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        moduleFilter.addEventListener('change', applyFilters);
+        document.getElementById('typeFilter').addEventListener('change', applyFilters);
+        
+        document.getElementById('highlightCycles').addEventListener('click', () => {
+            const cycleNodes = new Set(graphData.cycles.flat());
+            node.classed('faded', d => !cycleNodes.has(d.id));
+            node.classed('highlighted', d => cycleNodes.has(d.id));
+            link.classed('faded', d => !(cycleNodes.has(d.source.id || d.source) && cycleNodes.has(d.target.id || d.target)));
+        });
+        
+        document.getElementById('resetFilters').addEventListener('click', () => {
+            document.getElementById('searchInput').value = '';
+            moduleFilter.value = '';
+            document.getElementById('typeFilter').value = '';
+            node.classed('faded', false).classed('highlighted', false);
+            link.classed('faded', false);
+        });
+        
+        document.getElementById('exportSvg').addEventListener('click', () => {
+            const svgEl = document.getElementById('graph-svg');
+            const svgData = new XMLSerializer().serializeToString(svgEl);
+            const blob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'Sdlicit CLI_architecture.svg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+        
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const icon = document.querySelector('#themeToggle i');
+            icon.className = document.body.classList.contains('dark-mode') ? 'fas fa-sun' : 'fas fa-moon';
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            svg.attr('width', w).attr('height', h);
+            simulation.force('center', d3.forceCenter(w / 2, h / 2));
+            simulation.alpha(0.3).restart();
+        });
+    </script>
+</body>
+</html>

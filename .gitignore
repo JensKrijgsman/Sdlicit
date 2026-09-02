@@ -1,0 +1,38 @@
+.direnv
+.venv
+__pycache__
+*.pyc
+
+# Ollama / Docker persistent data (never commit model weights)
+services/ollama/models/
+*.gguf
+*.safetensors
+lightrag_workdir
+
+# Build outputs
+dist/
+out/
+*.vsix
+build/
+site/
+
+# Node.js / VS Code extension dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Local project workspaces (created at runtime under a working dir's .sdlicit/)
+.sdlicit/
+
+# ...except the bundled example project, which is intentionally checked in.
+# Re-excluded paths must come after the negation (gitignore = last match
+# wins), since `!.../**` would otherwise also un-ignore its lightrag_workdir/.
+!examples/demo/.sdlicit/
+!examples/demo/.sdlicit/**
+examples/demo/.sdlicit/knowledge/lightrag_workdir/
+
+# env file
+.env
+
+# CLI-spawned backend server log (see cli_client.py _try_autostart_server)
+.sdlicit-server.log
