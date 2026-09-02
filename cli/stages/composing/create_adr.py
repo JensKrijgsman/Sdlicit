@@ -24,8 +24,7 @@ from rich.panel import Panel
 from rich.prompt import Confirm, Prompt
 from rich.table import Table
 from rich.text import Text
-
-from shared.files import list_adr_files, write_adr, save_artifact_via_backend
+from shared.files import list_adr_files, save_artifact_via_backend, write_adr
 from shared.madr import AdrFields, ComposeResponse, render_madr  # noqa: F401
 
 from .suggest_directions import offer_directions_then_prompt_title
@@ -160,7 +159,7 @@ class _ADRSession:
     """
 
     def __init__(
-        self, client: "SdlicitClient", working_dir: str, template: str
+        self, client: SdlicitClient, working_dir: str, template: str
     ) -> None:
         self.client = client
         self.working_dir = working_dir
@@ -176,6 +175,7 @@ class _ADRSession:
         self._clarifications: dict[str, list[dict[str, Any]]] = {}
         self._last_step_value: dict[str, Any] = {}
         self._lock = threading.Lock()
+        self.supersedes_hint: dict[str, Any] | None = None
 
     # ── Rendering ─────────────────────────────────────────────────────────────
 
@@ -341,6 +341,23 @@ class _ADRSession:
                     agent="Requirements",
                     message=(
                         compliance if isinstance(compliance, str) else str(compliance)
+                    ),
+                )
+            )
+
+        hint = data.get("supersedes_hint")
+        if hint and not self.supersedes_hint:
+            self.supersedes_hint = hint
+            batch.append(
+                _Suggestion(
+                    step=step_name,
+                    color="yellow",
+                    kind="suggestion",
+                    agent="System",
+                    message=(
+                        f"Looks similar to {hint.get('adr_id', '?')}: "
+                        f"{hint.get('adr_title', '')} — {hint.get('reason', '')}. "
+                        "You'll be asked whether to mark it superseded when you save."
                     ),
                 )
             )
@@ -823,7 +840,7 @@ def _run_wizard(session: _ADRSession, steps: list[_Step]) -> None:
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 
-def action_create_adr(client: "SdlicitClient", working_dir: str) -> None:
+def action_create_adr(client: SdlicitClient, working_dir: str) -> None:
     """Interactively guide the user through creating a new MADR ADR."""
     console.print(
         Panel(
@@ -892,5 +909,29 @@ def action_create_adr(client: "SdlicitClient", working_dir: str) -> None:
             console.print(
                 f"[dim]✓ Ingested into KB ({ingest_resp['chunks']} chunks)[/dim]"
             )
+
+        hint = session.supersedes_hint
+        if hint:
+            old_id = hint.get("adr_id", "")
+            old_title = hint.get("adr_title", old_id)
+            if Confirm.ask(
+                f"Mark [bold]{old_id}: {old_title}[/bold] as superseded by this ADR?",
+                default=False,
+            ):
+                try:
+                    supersede_resp = client.supersede_adr(
+                        old_adr_id=old_id, new_text=result.content, new_adr_id=adr_id
+                    )
+                    console.print(
+                        f"[green]✓[/green] {old_id} marked superseded "
+                        f"(removed {supersede_resp.get('removed', 0)} old chunks, "
+                        f"added {supersede_resp.get('added', 0)} new)"
+                    )
+                    console.print(
+                        f"[dim]Note: edit the frontmatter of {old_id}'s file yourself "
+                        f"to record 'superseded by {adr_id}' — the file on disk is unchanged.[/dim]"
+                    )
+                except Exception as exc:
+                    console.print(f"[yellow]Could not mark {old_id} superseded:[/yellow] {exc}")
     else:
         console.print("[dim]ADR not written.[/dim]")

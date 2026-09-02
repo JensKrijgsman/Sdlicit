@@ -8,8 +8,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.rule import Rule
-
-from shared.files import latest_sow, write_srs, save_artifact_via_backend
+from shared.files import latest_sow, save_artifact_via_backend, write_srs
 from shared.review import prompt_review
 from shared.socratic import run_socratic_loop
 
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
 console = Console()
 
 
-def action_generate_srs(client: "SdlicitClient", working_dir: str) -> None:
+def action_generate_srs(client: SdlicitClient, working_dir: str) -> None:
     """Generate a structured SRS document from the latest SOW."""
     console.print(Rule("[bold]Generate SRS (from SOW)[/bold]"))
 
@@ -49,10 +48,12 @@ def action_generate_srs(client: "SdlicitClient", working_dir: str) -> None:
             f"\n\n[user notes]\n{extra_notes}" if extra_notes else ""
         )
 
-        def _call(clarifications: list[dict[str, Any]]) -> dict[str, Any]:
+        def _call(
+            clarifications: list[dict[str, Any]], _sow: str = effective_sow
+        ) -> dict[str, Any]:
             return client.generate_srs(
                 project_dir=working_dir,
-                sow_content=effective_sow,
+                sow_content=_sow,
                 clarifications=clarifications,
             )
 

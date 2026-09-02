@@ -6,9 +6,11 @@ from typing import TYPE_CHECKING
 
 from rich.console import Console
 from rich.panel import Panel
+from rich.prompt import Prompt
 from rich.rule import Rule
 from rich.table import Table
 from rich.tree import Tree
+from shared.files import list_adr_files, read_adr
 
 if TYPE_CHECKING:
     from api_client import SdlicitClient
@@ -16,7 +18,7 @@ if TYPE_CHECKING:
 console = Console()
 
 
-def action_traceability_dashboard(client: "SdlicitClient", working_dir: str) -> None:
+def action_traceability_dashboard(client: SdlicitClient, working_dir: str) -> None:
     """Display the traceability graph and coverage metrics."""
     console.print(Rule("[bold]Traceability Dashboard[/bold]"))
 
@@ -142,6 +144,71 @@ def action_traceability_dashboard(client: "SdlicitClient", working_dir: str) -> 
 
     console.print(tree)
     console.print(f"\n[dim]{len(nodes)} nodes, {len(edges)} edges[/dim]")
+
+
+def action_check_artifact_traceability(client: SdlicitClient, working_dir: str) -> None:
+    """Per-artifact link check: pick an ADR, validate its links, suggest implements."""
+    console.print(Rule("[bold]Check Artifact Traceability[/bold]"))
+
+    files = list_adr_files(working_dir)
+    if not files:
+        console.print("[yellow]No ADRs found — nothing to check.[/yellow]")
+        return
+
+    table = Table(title="ADRs", show_lines=False)
+    table.add_column("#", style="dim", width=4)
+    table.add_column("Filename", style="cyan")
+    table.add_column("Title")
+    for idx, f in enumerate(files, 1):
+        table.add_row(str(idx), f["filename"], f.get("title") or "—")
+    console.print(table)
+
+    choice = Prompt.ask(
+        "Pick an ADR to check", choices=[str(i) for i in range(1, len(files) + 1)]
+    )
+    entry = files[int(choice) - 1]
+    filename = entry["filename"]
+    if not filename:
+        return
+    artifact_id = filename.replace(".md", "")
+    content = read_adr(working_dir, filename)
+
+    with console.status(f"[bold]Checking {artifact_id}…[/bold]"):
+        try:
+            result = client.check_traceability(
+                artifact_id, artifact_content=content, project_dir=working_dir
+            )
+        except Exception as exc:
+            console.print(f"[red]Error checking traceability:[/red] {exc}")
+            return
+
+    issues = result.get("issues", [])
+    if issues:
+        console.print(
+            Panel(
+                "\n".join(
+                    f"[{_severity_colour(i.get('severity', 'warning'))}]"
+                    f"• {i.get('message', '')}[/{_severity_colour(i.get('severity', 'warning'))}]"
+                    for i in issues
+                ),
+                title=f"Issues — {artifact_id}",
+                border_style="yellow",
+            )
+        )
+    else:
+        console.print(f"[green]✓ No link issues found for {artifact_id}[/green]")
+
+    impacted = result.get("impacted_nodes", [])
+    if impacted:
+        console.print(f"[dim]Impacted if changed:[/dim] {', '.join(impacted)}")
+
+    suggested = result.get("suggested_implements", [])
+    if suggested:
+        console.print(f"[bold]Suggested implements:[/bold] {', '.join(suggested)}")
+
+    if result.get("has_conflicts"):
+        assessment = result.get("coverage_assessment", "")
+        console.print(Panel(assessment or "Conflicts detected.", title="Conflicts", border_style="red"))
 
 
 def _severity_colour(severity: str) -> str:

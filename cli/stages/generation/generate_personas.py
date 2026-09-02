@@ -9,13 +9,12 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.rule import Rule
 from rich.table import Table
-
 from shared.files import (
     latest_srs,
     list_adr_files,
     personas_md_path,
-    write_personas,
     save_artifact_via_backend,
+    write_personas,
 )
 from shared.review import prompt_review
 from shared.socratic import run_socratic_loop
@@ -42,7 +41,7 @@ def _render_personas(personas: list[dict]) -> None:
     console.print(table)
 
 
-def action_generate_personas(client: "SdlicitClient", working_dir: str) -> None:
+def action_generate_personas(client: SdlicitClient, working_dir: str) -> None:
     """Generate personas from ADRs + (optional) latest SRS, with Socratic engagement."""
     console.print(Rule("[bold]Generate Personas[/bold]"))
     files = list_adr_files(working_dir)
@@ -69,10 +68,12 @@ def action_generate_personas(client: "SdlicitClient", working_dir: str) -> None:
             f"\n\n[user notes]\n{extra_notes}" if extra_notes else ""
         )
 
-        def _call(clarifications: list[dict[str, Any]]) -> dict[str, Any]:
+        def _call(
+            clarifications: list[dict[str, Any]], _srs: str = effective_srs
+        ) -> dict[str, Any]:
             return client.generate_personas(
                 project_dir=working_dir,
-                srs_content=effective_srs,
+                srs_content=_srs,
                 clarifications=clarifications,
             )
 
@@ -131,7 +132,7 @@ def action_generate_personas(client: "SdlicitClient", working_dir: str) -> None:
         return
 
 
-def _ingest_personas(client: "SdlicitClient", md_path) -> None:
+def _ingest_personas(client: SdlicitClient, md_path) -> None:
     """Best-effort auto-ingest of personas markdown into the KB."""
     try:
         content = md_path.read_text(encoding="utf-8")

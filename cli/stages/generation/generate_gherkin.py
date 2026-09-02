@@ -9,13 +9,12 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.rule import Rule
 from rich.syntax import Syntax
-
 from shared.files import (
     latest_srs,
     load_personas,
     load_stories,
-    write_gherkin,
     save_artifact_via_backend,
+    write_gherkin,
 )
 from shared.review import prompt_review
 from shared.socratic import run_socratic_loop
@@ -26,7 +25,7 @@ if TYPE_CHECKING:
 console = Console()
 
 
-def action_generate_gherkin(client: "SdlicitClient", working_dir: str) -> None:
+def action_generate_gherkin(client: SdlicitClient, working_dir: str) -> None:
     """Generate Gherkin scenarios with Socratic engagement; save to artifacts/gherkin/."""
     console.print(Rule("[bold]Generate Gherkin Scenarios[/bold]"))
 
@@ -83,11 +82,13 @@ def action_generate_gherkin(client: "SdlicitClient", working_dir: str) -> None:
             f"\n\n[user notes]\n{extra_notes}" if extra_notes else ""
         )
 
-        def _call(clarifications: list[dict[str, Any]]) -> dict[str, Any]:
+        def _call(
+            clarifications: list[dict[str, Any]], _reqs: str = effective_reqs
+        ) -> dict[str, Any]:
             return client.generate_gherkin(
                 project_dir=working_dir,
                 personas=[persona],
-                requirements=effective_reqs,
+                requirements=_reqs,
                 clarifications=clarifications,
             )
 

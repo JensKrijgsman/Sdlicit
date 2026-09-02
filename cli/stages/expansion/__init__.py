@@ -12,14 +12,14 @@ from .expand_adr import action_expand_adr
 from .ingest_kb import action_ingest_kb
 from .kb_manage import action_kb_manage
 from .query_kb import action_query_kb
-from .traceability import action_traceability_dashboard
+from .traceability import action_check_artifact_traceability, action_traceability_dashboard
 
 if TYPE_CHECKING:
     from api_client import SdlicitClient
 
 
 def menu_entries(
-    client: "SdlicitClient", working_dir: str
+    client: SdlicitClient, working_dir: str
 ) -> list[tuple[str, str, str, object]]:
     return [
         (
@@ -51,5 +51,11 @@ def menu_entries(
             "Traceability dashboard",
             "View coverage metrics, graph nodes, and link integrity",
             lambda: action_traceability_dashboard(client, working_dir),
+        ),
+        (
+            "check_traceability",
+            "Check artifact links",
+            "Validate one ADR's links and get suggested implements",
+            lambda: action_check_artifact_traceability(client, working_dir),
         ),
     ]

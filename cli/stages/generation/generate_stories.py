@@ -10,13 +10,12 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.rule import Rule
 from rich.table import Table
-
 from shared.files import (
     latest_srs,
     list_adr_files,
     load_personas,
-    write_stories,
     save_artifact_via_backend,
+    write_stories,
 )
 from shared.review import prompt_review
 from shared.socratic import run_socratic_loop
@@ -55,7 +54,7 @@ def _stories_to_md(stories: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def action_generate_stories(client: "SdlicitClient", working_dir: str) -> None:
+def action_generate_stories(client: SdlicitClient, working_dir: str) -> None:
     files = list_adr_files(working_dir)
     if not files:
         console.print(
@@ -98,11 +97,13 @@ def action_generate_stories(client: "SdlicitClient", working_dir: str) -> None:
             f"\n\n[user notes]\n{extra_notes}" if extra_notes else ""
         )
 
-        def _call(clarifications: list[dict[str, Any]]) -> dict[str, Any]:
+        def _call(
+            clarifications: list[dict[str, Any]], _reqs: str = effective_reqs
+        ) -> dict[str, Any]:
             return client.generate_stories(
                 project_dir=working_dir,
                 personas=personas_json,
-                requirements=effective_reqs,
+                requirements=_reqs,
                 clarifications=clarifications,
             )
 

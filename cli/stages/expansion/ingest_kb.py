@@ -86,10 +86,7 @@ def _show_doc_table(
                 else "[dim]○[/dim]"
             )
 
-        if selected is not None:
-            num_style = "bold" if i in selected else "dim"
-        else:
-            num_style = "bold"
+        num_style = ("bold" if i in selected else "dim") if selected is not None else "bold"
 
         file_cell = f"[{file_style}]{path}[/{file_style}]" if file_style else path
         table.add_row(
@@ -213,7 +210,7 @@ def action_ingest_kb(client: SdlicitClient, working_dir: str) -> None:
 
     console.print()
     choice = Prompt.ask(
-        "[bold]Insert[/bold] \[a]ll / \[s]ome / \[q]uit",
+        r"[bold]Insert[/bold] \[a]ll / \[s]ome / \[q]uit",
         choices=["a", "s", "q"],
         default="a",
     )

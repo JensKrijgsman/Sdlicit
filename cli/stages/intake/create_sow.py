@@ -10,8 +10,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Confirm
 from rich.table import Table
-
-from shared.files import next_sow_filename, write_sow, save_artifact_via_backend
+from shared.files import next_sow_filename, save_artifact_via_backend, write_sow
 from shared.review import prompt_review
 from shared.socratic import run_socratic_loop
 
@@ -69,7 +68,7 @@ def _render_progress_table(sections: list[dict[str, Any]]) -> Table:
     return table
 
 
-def action_create_sow(client: "SdlicitClient", working_dir: str) -> None:
+def action_create_sow(client: SdlicitClient, working_dir: str) -> None:
     """Interactively create a SOW from a raw project brief."""
     console.print(
         Panel(
@@ -99,8 +98,10 @@ def action_create_sow(client: "SdlicitClient", working_dir: str) -> None:
 
         if not sow_markdown:
             # Fallback to synchronous endpoint
-            def _call(clarifications: list[dict[str, Any]]) -> dict[str, Any]:
-                return client.create_sow(brief, clarifications=clarifications)
+            def _call(
+                clarifications: list[dict[str, Any]], _brief: str = brief
+            ) -> dict[str, Any]:
+                return client.create_sow(_brief, clarifications=clarifications)
 
             data = run_socratic_loop(
                 _call, status_message="SOW Agent is analysing your brief…"
@@ -144,7 +145,7 @@ def action_create_sow(client: "SdlicitClient", working_dir: str) -> None:
         return
 
 
-def _stream_sow(client: "SdlicitClient", brief: str) -> str | None:
+def _stream_sow(client: SdlicitClient, brief: str) -> str | None:
     """Stream SOW generation section-by-section with Rich Live display.
 
     Returns the full markdown on success, or None on failure/fallback.
@@ -175,53 +176,55 @@ def _stream_sow(client: "SdlicitClient", brief: str) -> str | None:
     full_markdown = ""
 
     try:
-        with Live(
-            _render_progress_table(sections), console=console, refresh_per_second=4
-        ) as live:
-            with client.create_sow_stream(brief) as events:
-                for event in events:
-                    ev_type = event.get("event")
-                    section_key = event.get("section")
-                    idx = next(
-                        (i for i, s in enumerate(sections) if s["key"] == section_key), -1
-                    )
+        with (
+            Live(
+                _render_progress_table(sections), console=console, refresh_per_second=4
+            ) as live,
+            client.create_sow_stream(brief) as events,
+        ):
+            for event in events:
+                ev_type = event.get("event")
+                section_key = event.get("section")
+                idx = next(
+                    (i for i, s in enumerate(sections) if s["key"] == section_key), -1
+                )
 
-                    if ev_type == "section_start" and idx >= 0:
-                        sections[idx]["status"] = "generating"
+                if ev_type == "section_start" and idx >= 0:
+                    sections[idx]["status"] = "generating"
+                    live.update(_render_progress_table(sections))
+
+                elif ev_type == "section_complete" and idx >= 0:
+                    sections[idx]["status"] = "complete"
+                    sections[idx]["content"] = event.get("content", "")
+                    sections[idx]["needs_socratic"] = event.get("needs_socratic", False)
+                    live.update(_render_progress_table(sections))
+
+                    # Show the section content immediately
+                    md_text = event.get("markdown", "")
+                    if md_text:
+                        console.print(Panel(Markdown(md_text), border_style="dim"))
+
+                elif ev_type == "socratic_probe":
+                    probe = event.get("probe", {})
+                    if idx >= 0:
+                        sections[idx]["probe"] = probe
                         live.update(_render_progress_table(sections))
-
-                    elif ev_type == "section_complete" and idx >= 0:
-                        sections[idx]["status"] = "complete"
-                        sections[idx]["content"] = event.get("content", "")
-                        sections[idx]["needs_socratic"] = event.get("needs_socratic", False)
-                        live.update(_render_progress_table(sections))
-
-                        # Show the section content immediately
-                        md_text = event.get("markdown", "")
-                        if md_text:
-                            console.print(Panel(Markdown(md_text), border_style="dim"))
-
-                    elif ev_type == "socratic_probe":
-                        probe = event.get("probe", {})
-                        if idx >= 0:
-                            sections[idx]["probe"] = probe
-                            live.update(_render_progress_table(sections))
-                        if probe.get("question"):
-                            console.print(
-                                Panel(
-                                    f"[bold magenta]Socratic Probe[/bold magenta] ({probe.get('style', '')})\n\n"
-                                    f"{probe.get('question', '')}",
-                                    border_style="magenta",
-                                    title=f"Section: {event.get('section', '')}",
-                                )
+                    if probe.get("question"):
+                        console.print(
+                            Panel(
+                                f"[bold magenta]Socratic Probe[/bold magenta] ({probe.get('style', '')})\n\n"
+                                f"{probe.get('question', '')}",
+                                border_style="magenta",
+                                title=f"Section: {event.get('section', '')}",
                             )
+                        )
 
-                    elif ev_type == "kb_verification" and idx >= 0:
-                        sections[idx]["kb_grounded"] = event.get("grounded")
-                        live.update(_render_progress_table(sections))
+                elif ev_type == "kb_verification" and idx >= 0:
+                    sections[idx]["kb_grounded"] = event.get("grounded")
+                    live.update(_render_progress_table(sections))
 
-                    elif ev_type == "complete":
-                        full_markdown = event.get("full_markdown", "")
+                elif ev_type == "complete":
+                    full_markdown = event.get("full_markdown", "")
 
         return full_markdown or None
 

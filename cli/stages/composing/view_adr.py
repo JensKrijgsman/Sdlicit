@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from pathlib import Path
 
 from rich.columns import Columns
 from rich.console import Console
@@ -12,9 +11,8 @@ from rich.prompt import Prompt
 from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
-
-from shared.parsers import parse_madr_content
 from shared.files import adr_dir, list_adr_files, read_adr
+from shared.parsers import parse_madr_content
 
 console = Console()
 
@@ -86,7 +84,7 @@ def _render_adr(content: str, filename: str) -> None:
     for heading in ("Context and Problem Statement", "Context"):
         if heading in sections:
             body = "\n".join(
-                l for l in sections[heading] if l.strip() and not l.startswith("#")
+                ln for ln in sections[heading] if ln.strip() and not ln.startswith("#")
             )
             if body.strip():
                 console.print(
@@ -117,9 +115,9 @@ def _render_adr(content: str, filename: str) -> None:
     for heading in ("Decision Outcome", "Decision"):
         if heading in sections:
             body_lines = [
-                l
-                for l in sections[heading]
-                if l.strip() and not l.startswith("##") and not l.startswith("###")
+                ln
+                for ln in sections[heading]
+                if ln.strip() and not ln.startswith("##") and not ln.startswith("###")
             ]
             body = "\n".join(body_lines).strip()
             if body:

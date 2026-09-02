@@ -13,18 +13,20 @@ from __future__ import annotations
 
 import atexit
 import os
+import shutil
 import signal
+import subprocess
+import time
 from pathlib import Path
 from typing import Any
 
+from api_client import DEFAULT_BASE_URL, SdlicitClient
 from dotenv import load_dotenv
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import BarColumn, Progress, TextColumn
 from rich.prompt import Prompt
 from rich.table import Table
-
-from api_client import SdlicitClient, DEFAULT_BASE_URL
 from shared.journal import (
     Journal,
     detect_crashed_sessions,
@@ -39,7 +41,7 @@ from stages.intake import menu_entries as intake_entries
 
 console = Console()
 
-DEFAULT_WORKING_DIR = str((Path(__file__).resolve().parent.parent / "test").resolve())
+DEFAULT_WORKING_DIR = str((Path(__file__).resolve().parent.parent / "examples" / "demo").resolve())
 
 
 def _clear() -> None:
@@ -426,6 +428,53 @@ def _draw_menu(stages: list[tuple[str, list[MenuEntry]]]) -> dict[str, object]:
     return choices
 
 
+def _try_autostart_server(client: SdlicitClient, timeout: float = 30.0) -> bool:
+    """Spawn the backend server locally and wait for it to come up.
+
+    Only attempted when the configured server URL points at localhost,
+    since starting a remote server from here makes no sense. Mirrors
+    what the VS Code extension's serverLifecycle.ts does, minus the
+    visible terminal — output goes to a log file instead.
+    """
+    host = client.server_url.split("://", 1)[-1].split("/", 1)[0].split(":")[0]
+    if host not in ("127.0.0.1", "localhost"):
+        return False
+
+    uv = shutil.which("uv")
+    if not uv:
+        return False
+
+    repo_root = Path(__file__).resolve().parent.parent
+    if not (repo_root / "pyproject.toml").exists():
+        return False
+
+    log_path = repo_root / ".sdlicit-server.log"
+    console.print(
+        f"[dim]No server running at {client.server_url} — starting one "
+        f"(log: {log_path})…[/dim]"
+    )
+    try:
+        with open(log_path, "ab") as log_file:
+            subprocess.Popen(
+                [uv, "run", "uvicorn", "sdlicit.main:app"],
+                cwd=repo_root,
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+    except OSError as exc:
+        console.print(f"[red]Could not start server:[/red] {exc}")
+        return False
+
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if client.health():
+            return True
+        time.sleep(1.0)
+    return False
+
+
 def main() -> None:
     load_dotenv()
     _clear()
@@ -455,12 +504,17 @@ def main() -> None:
     client = SdlicitClient(base_url=server_url)
 
     with console.status("[bold]Connecting to Sdlicit server…[/bold]"):
-        if not client.health():
-            console.print(
-                f"\n[red]✗  Cannot reach server at {client.server_url}[/red]\n"
-                "[dim]Start the backend with: uvicorn sdlicit.main:app[/dim]\n"
-            )
-            return
+        reachable = client.health()
+
+    if not reachable:
+        reachable = _try_autostart_server(client)
+
+    if not reachable:
+        console.print(
+            f"\n[red]✗  Cannot reach server at {client.server_url}[/red]\n"
+            "[dim]Start the backend with: uv run uvicorn sdlicit.main:app[/dim]\n"
+        )
+        return
 
     with console.status("[bold]Initialising project…[/bold]"):
         try:
