@@ -2,7 +2,7 @@ name: Extension CI
 
 on:
   push:
-    branches: [master, main]
+    branches: [main]
     paths:
       - "extension/**"
       - ".github/workflows/extension-ci.yml"

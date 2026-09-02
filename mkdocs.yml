@@ -1,7 +1,7 @@
 site_name: Sdlicit
 site_description: Knowledge-grounded LLM framework for structured SDLC artifact creation
 repo_url: https://github.com/JensKrijgsman/Sdlicit-public
-edit_uri: edit/master/docs/
+edit_uri: edit/main/docs/
 
 theme:
   name: material

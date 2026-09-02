@@ -30,7 +30,7 @@ uv run uvicorn sdlicit.main:app --reload
 
 The server listens on `http://127.0.0.1:8000` and stays idle until a client sends `POST /api/v1/init`.
 
-Optional supporting services (Postgres, Ollama, a standalone LightRAG server) are defined in [`services/compose.yaml`](https://github.com/JensKrijgsman/Sdlicit-public/blob/master/services/compose.yaml):
+Optional supporting services (Postgres, Ollama, a standalone LightRAG server) are defined in [`services/compose.yaml`](https://github.com/JensKrijgsman/Sdlicit-public/blob/main/services/compose.yaml):
 
 ```bash
 docker compose -f services/compose.yaml up -d
@@ -63,7 +63,7 @@ See the [Extension guide](extension.md) for the sidebar views and commands.
 
 ## 4. Point a client at a project
 
-Both clients need a project directory containing `.sdlicit/config.yaml`. [`examples/demo/`](https://github.com/JensKrijgsman/Sdlicit-public/tree/master/examples/demo) is a ready made one — the CLI defaults to it.
+Both clients need a project directory containing `.sdlicit/config.yaml`. [`examples/demo/`](https://github.com/JensKrijgsman/Sdlicit-public/tree/main/examples/demo) is a ready made one — the CLI defaults to it.
 
 A minimal `.sdlicit/config.yaml` for a new project:
 

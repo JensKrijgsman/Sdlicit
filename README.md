@@ -2,6 +2,8 @@
 
 Sdlicit is a knowledge-grounded LLM framework for structured SDLC artifact creation — Statements of Work, Architecture Decision Records, SRS documents, personas, user stories, and BDD/Gherkin scenarios — built around RAG-grounded generation, Socratic elicitation, and end-to-end requirement traceability.
 
+Sdlicit is thesis research by Jens Krijgsman. The research questions, system design, and evaluation are the author's own work. An LLM coding agent (Claude Code) was used as an implementation tool, under the author's direction and review, for portions of the backend, CLI, and extension code, and for this documentation — it did not originate the research ideas.
+
 It's split into three parts that all talk to one backend:
 
 | Component | Path | What it is |

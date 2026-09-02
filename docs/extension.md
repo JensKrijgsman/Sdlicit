@@ -10,7 +10,7 @@ npm install
 npm run compile
 ```
 
-Open the `extension/` folder in VS Code and press `F5` to launch an Extension Development Host, or package it with `vsce package` and install the resulting `.vsix`. Open a project directory containing `.sdlicit/config.yaml` as your workspace — [`examples/demo/`](https://github.com/JensKrijgsman/Sdlicit-public/tree/master/examples/demo) is a ready made one.
+Open the `extension/` folder in VS Code and press `F5` to launch an Extension Development Host, or package it with `vsce package` and install the resulting `.vsix`. Open a project directory containing `.sdlicit/config.yaml` as your workspace — [`examples/demo/`](https://github.com/JensKrijgsman/Sdlicit-public/tree/main/examples/demo) is a ready made one.
 
 ## Sidebar views
 
