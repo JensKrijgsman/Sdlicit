@@ -665,7 +665,7 @@ export class CanvasProvider {
                                             }).join('') + '</div>';
                                     }
                                     el.innerHTML = '<div class="elicitation-panel">' +
-                                        '<p class=\"elicitation-question\">' + questionText + '</p>' +
+                                        '<p class="elicitation-question">' + questionText + '</p>' +
                                         optionsHtml +
                                         '<div class="flex gap-sm mt-sm">' +
                                         '<input type="text" id="elicit-input-' + idx + '" placeholder="Type your answer..." style="flex:1">' +

@@ -841,7 +841,7 @@ export class BddPanelProvider {
                         html += '<div class="' + cls + '"><span class="gherkin-keyword">' + kwMatch[1] + '</span>' + highlightContent(afterKw) + '</div>';
                     } else if (t.startsWith('|')) {
                         // Highlight table separators
-                        var tableHtml = esc(line).replace(/\|/g, '<span class="gherkin-cell-sep">|</span>');
+                        var tableHtml = esc(line).replace(/\\|/g, '<span class="gherkin-cell-sep">|</span>');
                         html += '<div class="' + cls + '">' + tableHtml + '</div>';
                     } else if (t.startsWith('@')) {
                         html += '<div class="' + cls + '">' + esc(line) + '</div>';

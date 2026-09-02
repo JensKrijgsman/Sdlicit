@@ -1105,10 +1105,10 @@ export class SRSPanelProvider {
                         if (inOl) { html += '</ol>'; inOl = false; }
                         if (!inUl) { html += '<ul>'; inUl = true; }
                         html += '<li>' + fmtInline(t.slice(2)) + '</li>';
-                    } else if (/^\\d+[.)]\s/.test(t)) {
+                    } else if (/^\\d+[.)]\\s/.test(t)) {
                         if (inUl) { html += '</ul>'; inUl = false; }
                         if (!inOl) { html += '<ol>'; inOl = true; }
-                        html += '<li>' + fmtInline(t.replace(/^\\d+[.)]\s/, '')) + '</li>';
+                        html += '<li>' + fmtInline(t.replace(/^\\d+[.)]\\s/, '')) + '</li>';
                     } else if (t === '') {
                         if (inUl) { html += '</ul>'; inUl = false; }
                         if (inOl) { html += '</ol>'; inOl = false; }
