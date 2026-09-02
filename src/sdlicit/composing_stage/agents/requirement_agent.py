@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from sdlicit.agents.base import AgentResult, KBReference, Suggestion
 from sdlicit.agents.llm.dspy_modules import RequirementCheck, ToMComplianceConsult
 from sdlicit.agents.llm.gateway import LLMGateway
-from sdlicit.helpers.kb_access import retrieve_context
+from sdlicit.helpers.kb_access import retrieve_chunks
 from sdlicit.logging import get_logger
 
 if TYPE_CHECKING:
@@ -57,9 +57,10 @@ class RequirementAgent:
                 _log.debug("[RequirementAgent] ToM consultation failed: %s", exc)
 
         # KB lookup — prefer router for store-aware (knowledge store) retrieval
-        kb_text = await retrieve_context(
+        chunks = await retrieve_chunks(
             adr_content[:300], kb_router=self._kb_router, kb=self._kb,
         )
+        kb_text = "\n\n".join(c.text for c in chunks if c.text)
 
         result = await self._llm.predict(
             RequirementCheck,
@@ -71,7 +72,10 @@ class RequirementAgent:
         if compliance is None:
             return AgentResult()
 
-        refs = [KBReference(source="kb", chunk=kb_text[:500], relevance=1.0)] if kb_text else []
+        refs = [
+            KBReference(source=c.source, chunk=c.text, relevance=c.relevance)
+            for c in chunks
+        ]
         suggestions = [
             Suggestion(
                 field="compliance", message=s, severity="medium", references=refs

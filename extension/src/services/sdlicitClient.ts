@@ -671,9 +671,53 @@ export class SdlicitClient {
     }
 
     async generateGherkin(projectDir: string, personas?: string[], requirements?: string, clarifications: Clarification[] = []): Promise<GenerationResponse> {
-        // Backend expects personas as list of {name, role, goals, frustrations} objects
-        const parsedPersonas = personas ? this.parsePersonasMarkdown(personas.join('\n\n')) : [];
+        const parsedPersonas = personas ? this.normalizePersonasInput(personas) : [];
         return this.post('/generation/gherkin', { project_dir: projectDir, personas: parsedPersonas, requirements, clarifications });
+    }
+
+    /** Parse personas from JSON exports or markdown into structured objects. */
+    private normalizePersonasInput(personas: string[]): Array<{ name: string; role: string; goals: string[]; frustrations: string[] }> {
+        const deduped = new Map<string, { name: string; role: string; goals: string[]; frustrations: string[] }>();
+
+        const addPersona = (persona: { name: string; role: string; goals: string[]; frustrations: string[] }) => {
+            const key = persona.name.trim().toLowerCase();
+            if (!key) { return; }
+            const existing = deduped.get(key);
+            const score = persona.goals.length + persona.frustrations.length;
+            const existingScore = existing ? existing.goals.length + existing.frustrations.length : -1;
+            if (!existing || score > existingScore) {
+                deduped.set(key, persona);
+            }
+        };
+
+        for (const chunk of personas) {
+            const trimmed = chunk.trim();
+            if (!trimmed) { continue; }
+
+            if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                try {
+                    const parsed = JSON.parse(trimmed);
+                    const items = Array.isArray(parsed) ? parsed : (parsed.personas || [parsed]);
+                    for (const item of items) {
+                        if (item?.name) {
+                            addPersona({
+                                name: String(item.name),
+                                role: String(item.role || ''),
+                                goals: Array.isArray(item.goals) ? item.goals.map(String) : [],
+                                frustrations: Array.isArray(item.frustrations) ? item.frustrations.map(String) : [],
+                            });
+                        }
+                    }
+                    continue;
+                } catch { /* fall through to markdown parsing */ }
+            }
+
+            for (const persona of this.parsePersonasMarkdown(trimmed)) {
+                addPersona(persona);
+            }
+        }
+
+        return Array.from(deduped.values());
     }
 
     /** Parse personas markdown into structured objects for the backend. */
@@ -690,15 +734,29 @@ export class SdlicitClient {
             const trimmed = line.trim();
             if (/^##\s+/.test(trimmed)) {
                 flush();
-                current = { name: trimmed.replace(/^##\s+/, ''), role: '', goals: [], frustrations: [] };
+                const heading = trimmed.replace(/^##\s+/, '');
+                const idMatch = heading.match(/^(?:PERSONA-\d+|P-\d+)\s*:\s*(.+)$/i);
+                current = { name: idMatch?.[1]?.trim() || heading, role: '', goals: [], frustrations: [] };
                 inGoals = false; inFrustrations = false;
             } else if (current) {
                 if (/^\*\*Role\*\*[:\s]*/i.test(trimmed) || /^Role[:\s]*/i.test(trimmed)) {
                     current.role = trimmed.replace(/^\*\*Role\*\*[:\s]*/i, '').replace(/^Role[:\s]*/i, '');
                     inGoals = false; inFrustrations = false;
-                } else if (/^\*\*Goals?\*\*/i.test(trimmed) || /^Goals?[:\s]*$/i.test(trimmed)) {
+                } else if (/^\*\*Goals?\*\*[:\s]*/i.test(trimmed)) {
+                    const inline = trimmed.replace(/^\*\*Goals?\*\*[:\s]*/i, '').trim();
+                    if (inline) {
+                        current.goals.push(...inline.split(/[,;]\s*/).map(s => s.trim()).filter(Boolean));
+                    }
                     inGoals = true; inFrustrations = false;
-                } else if (/^\*\*Frustrations?\*\*/i.test(trimmed) || /^Frustrations?[:\s]*$/i.test(trimmed) || /^\*\*Pain Points?\*\*/i.test(trimmed)) {
+                } else if (/^Goals?[:\s]*$/i.test(trimmed)) {
+                    inGoals = true; inFrustrations = false;
+                } else if (/^\*\*Frustrations?\*\*[:\s]*/i.test(trimmed) || /^\*\*Pain Points?\*\*[:\s]*/i.test(trimmed)) {
+                    const inline = trimmed.replace(/^\*\*(?:Frustrations?|Pain Points?)\*\*[:\s]*/i, '').trim();
+                    if (inline) {
+                        current.frustrations.push(...inline.split(/[,;]\s*/).map(s => s.trim()).filter(Boolean));
+                    }
+                    inGoals = false; inFrustrations = true;
+                } else if (/^Frustrations?[:\s]*$/i.test(trimmed)) {
                     inGoals = false; inFrustrations = true;
                 } else if (/^[-*]\s+/.test(trimmed)) {
                     const item = trimmed.replace(/^[-*]\s+/, '');

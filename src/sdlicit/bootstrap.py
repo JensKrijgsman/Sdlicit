@@ -18,6 +18,7 @@ from sdlicit.agents.llm.dspy_programs import (
     ValidatedADRProgram,
     ValidatedGherkinProgram,
     ValidatedRequirementProgram,
+    ValidatedSOWProgram,
     ValidatedUserStoryProgram,
 )
 from sdlicit.agents.llm.gateway import LLMGateway
@@ -41,6 +42,8 @@ def _configure_dspy(config: SdlicitConfig) -> None:
                 lm=dspy.LM(
                     model=f"openrouter/{config.model}",
                     api_key=config.api_key,
+                    timeout=300,
+                    num_retries=3,
                 ),
                 adapter=BAMLAdapter(),
             )
@@ -49,17 +52,30 @@ def _configure_dspy(config: SdlicitConfig) -> None:
                 lm=dspy.LM(
                     model=f"openrouter/{config.model}",
                     api_key=config.api_key,
+                    timeout=300,
+                    num_retries=3,
                 )
             )
     elif config.provider == "ollama":
-        dspy.configure(
-            lm=dspy.LM(
-                model=f"ollama_chat/{config.model}",
-                api_base=config.ollama_host,
-                timeout=120,
-                num_retries=3,
-            )
+        ollama_lm = dspy.LM(
+            model=f"ollama_chat/{config.model}",
+            api_base=config.ollama_host,
+            # Local reasoning models (qwen3.5) emit long <think> traces before the
+            # structured answer, so a single call can run several minutes. 120s
+            # truncated calls mid-thought and triggered the NB05 timeout cascade;
+            # 600s matches litellm's historical default used for the prior runs.
+            timeout=600,
+            num_retries=3,
         )
+        try:
+            # Use the SAME structured-output adapter as the OpenRouter branch so
+            # local-vs-cloud comparisons (e.g. NB05's capability floor) are not
+            # confounded by different structured-output machinery (audit I2).
+            from dspy.adapters.baml_adapter import BAMLAdapter
+
+            dspy.configure(lm=ollama_lm, adapter=BAMLAdapter())
+        except ImportError:
+            dspy.configure(lm=ollama_lm)
 
 
 def _register_programs(gateway: LLMGateway, model_type: str) -> None:
@@ -80,6 +96,9 @@ def _register_programs(gateway: LLMGateway, model_type: str) -> None:
     )
     gateway.register_program(
         "ADRGeneration", ValidatedADRProgram(model_type=model_type)
+    )
+    gateway.register_program(
+        "ExtractSOW", ValidatedSOWProgram(model_type=model_type)
     )
 
 
@@ -117,12 +136,16 @@ def create_system(project_dir: Path) -> tuple[SdlicitConfig, Orchestrator]:
                 override_lms[sig_name] = dspy.LM(
                     model=f"{prefix}{model_str}",
                     api_key=config.api_key,
+                    timeout=300,
+                    num_retries=3,
                 )
             elif config.provider == "ollama":
                 override_lms[sig_name] = dspy.LM(
                     model=f"ollama_chat/{model_str}",
                     api_base=config.ollama_host,
-                    timeout=120,
+                    # See note above: local reasoning models need a generous
+                    # timeout so think-then-answer calls are not truncated.
+                    timeout=600,
                     num_retries=3,
                 )
         orchestrator.llm.set_overrides(override_lms)

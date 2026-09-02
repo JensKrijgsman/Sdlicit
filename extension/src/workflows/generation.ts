@@ -76,11 +76,23 @@ export async function runGenerateStories(
         return;
     }
 
-    // Read personas file
+    // Read personas file — prefer JSON export over markdown duplicate
     const personaArtifacts = store.listArtifacts().filter(a => a.type === 'personas');
-    const personas: string[] = personaArtifacts
-        .map(a => store.readArtifact(a.filePath))
-        .filter((c): c is string => c !== null);
+    const jsonArtifact = personaArtifacts.find(a => a.filePath.endsWith('.json'));
+    const mdArtifact = personaArtifacts.find(a => a.filePath.endsWith('.md'));
+    const personas: string[] = [];
+    if (jsonArtifact) {
+        const content = store.readArtifact(jsonArtifact.filePath);
+        if (content) { personas.push(content); }
+    } else if (mdArtifact) {
+        const content = store.readArtifact(mdArtifact.filePath);
+        if (content) { personas.push(content); }
+    } else {
+        personaArtifacts.forEach(a => {
+            const content = store.readArtifact(a.filePath);
+            if (content) { personas.push(content); }
+        });
+    }
 
     const storiesPanel = new StoriesPanelProvider(client, store, kbSync, globalStoragePath);
     const result = await storiesPanel.startGeneration(srsContent, personas);
@@ -107,9 +119,21 @@ export async function runGenerateGherkin(
     }
 
     const personaArtifacts = store.listArtifacts().filter(a => a.type === 'personas');
-    const personas: string[] = personaArtifacts
-        .map(a => store.readArtifact(a.filePath))
-        .filter((c): c is string => c !== null);
+    const jsonArtifact = personaArtifacts.find(a => a.filePath.endsWith('.json'));
+    const mdArtifact = personaArtifacts.find(a => a.filePath.endsWith('.md'));
+    const personas: string[] = [];
+    if (jsonArtifact) {
+        const content = store.readArtifact(jsonArtifact.filePath);
+        if (content) { personas.push(content); }
+    } else if (mdArtifact) {
+        const content = store.readArtifact(mdArtifact.filePath);
+        if (content) { personas.push(content); }
+    } else {
+        personaArtifacts.forEach(a => {
+            const content = store.readArtifact(a.filePath);
+            if (content) { personas.push(content); }
+        });
+    }
 
     const bddPanel = new BddPanelProvider(client, store, kbSync, globalStoragePath);
     const result = await bddPanel.startGeneration(srsContent, personas);

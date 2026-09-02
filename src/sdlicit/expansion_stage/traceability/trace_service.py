@@ -43,6 +43,21 @@ RE_STORY = re.compile(r"STORY-\d+")
 RE_BDD = re.compile(r"BDD-\d+")
 RE_KB = re.compile(r"KB:[^\s,\]]+")
 
+_CANON_ID_RE = re.compile(r"^([A-Za-z]+(?:-[A-Za-z]+)*)-(\d+)$")
+
+
+def _canon_id(raw: str) -> str:
+    """Canonicalise an artifact ID for width-insensitive comparison.
+
+    Strips leading zeros from the numeric suffix so that ``ADR-002`` and
+    ``ADR-0002`` compare equal, and uppercases the prefix. IDs that do not
+    match the ``PREFIX-NN`` shape are returned upper-cased and stripped.
+    """
+    m = _CANON_ID_RE.match(raw.strip())
+    if not m:
+        return raw.strip().upper()
+    return f"{m.group(1).upper()}-{int(m.group(2))}"
+
 # ── Stopwords for semantic analysis ──────────────────────────────────────────
 
 _STOPWORDS = frozenset(
@@ -82,6 +97,8 @@ class ArtifactCoverage:
     outgoing_links: int = 0
     valid_links: int = 0
     broken_links: int = 0
+    # KB citations (reported separately — NOT folded into structural validity)
+    kb_citations: int = 0
     # Semantic (best-match score against upstream requirements)
     semantic_score: float | None = None
     covered_by: list[str] = field(default_factory=list)
@@ -98,6 +115,11 @@ class TraceCoverage:
     broken_links_count: int = 0
     structural_coverage_pct: float = 0.0
     broken_link_details: list[TraceLink] = field(default_factory=list)
+    # KB citations — outbound references to the external corpus. Reported
+    # separately from intra-workspace structural links because they cannot be
+    # resolved against workspace IDs and would otherwise bias coverage upward.
+    kb_citation_count: int = 0
+    artifacts_with_kb_citations: int = 0
     # Semantic metrics (populated when mode is semantic or full)
     semantic_coverage_pct: float | None = None
     mean_tfidf: float | None = None
@@ -130,6 +152,8 @@ class TraceCoverage:
             "valid_links": self.valid_links,
             "broken_links_count": self.broken_links_count,
             "structural_coverage_pct": round(self.structural_coverage_pct, 2),
+            "kb_citation_count": self.kb_citation_count,
+            "artifacts_with_kb_citations": self.artifacts_with_kb_citations,
             "semantic_coverage_pct": (
                 round(self.semantic_coverage_pct, 2)
                 if self.semantic_coverage_pct is not None
@@ -157,6 +181,7 @@ class TraceCoverage:
                     "outgoing_links": a.outgoing_links,
                     "valid_links": a.valid_links,
                     "broken_links": a.broken_links,
+                    "kb_citations": a.kb_citations,
                     "semantic_score": (
                         round(a.semantic_score, 4)
                         if a.semantic_score is not None
@@ -350,9 +375,10 @@ class TraceService:
         # Build a pseudo-document for the artifact
         artifact_doc = _ArtefactDoc(artefact_id="_new", artefact_type="adr", text=artifact_text)
 
-        # Phase 1: Explicit REQ-ID mentions in the text (always detected)
-        import re as _re
-        req_ids_in_text = set(_re.findall(r"REQ-(?:FUNC|NONFUNC)-\d+", artifact_text))
+        # Phase 1: Explicit REQ-ID mentions in the text (always detected).
+        # Use the canonical REQ-<DOMAIN>-<NN> pattern (RE_REQ) so any domain tag
+        # is matched, not just the defunct FUNC/NONFUNC scheme.
+        req_ids_in_text = set(RE_REQ.findall(artifact_text))
         known_req_ids = {r.artefact_id for r in reqs}
         explicit_matches = req_ids_in_text & known_req_ids
 
@@ -413,27 +439,42 @@ class TraceService:
             "gherkin": len(gherkin),
         }
 
+        # Canonical (width-insensitive) lookup sets so that ADR-002 and ADR-0002
+        # resolve to the same artifact (see _canon_id). This prevents false
+        # broken links when artifacts use different zero-padding widths.
+        req_canon = {_canon_id(x) for x in req_ids}
+        adr_canon = {_canon_id(x) for x in adrs}
+        persona_canon = {_canon_id(x) for x in persona_ids}
+        story_canon = {_canon_id(x) for x in stories}
+
         # Check ADR references
         for adr_id, refs in adrs.items():
             art_cov = ArtifactCoverage(artifact_id=adr_id, artifact_type="adr")
             for r in refs["req_refs"]:
-                valid = r in req_ids
+                valid = _canon_id(r) in req_canon
                 self._record_link(result, art_cov, adr_id, r, "cites_req", valid)
             for a in refs["adr_refs"]:
-                valid = a in adrs
+                valid = _canon_id(a) in adr_canon
                 self._record_link(result, art_cov, adr_id, a, "cites_adr", valid)
-            for k in refs["kb_refs"]:
-                self._record_link(result, art_cov, adr_id, k, "cites_kb", True)
+            # KB citations are recorded separately and NOT counted as structural
+            # links. They reference an external corpus and cannot be resolved
+            # against workspace IDs, so counting them as always-valid would bias
+            # structural coverage upward and one-sidedly (only ADRs cite KB).
+            kb_refs = [k for k in refs["kb_refs"] if k]
+            art_cov.kb_citations = len(kb_refs)
+            result.kb_citation_count += len(kb_refs)
+            if kb_refs:
+                result.artifacts_with_kb_citations += 1
             result.artifacts.append(art_cov)
 
         # Check story references
         for story_id, refs in stories.items():
             art_cov = ArtifactCoverage(artifact_id=story_id, artifact_type="story")
             for p in refs["persona_refs"]:
-                valid = p in persona_ids
+                valid = _canon_id(p) in persona_canon
                 self._record_link(result, art_cov, story_id, p, "cites_persona", valid)
             for r in refs["req_refs"]:
-                valid = r in req_ids
+                valid = _canon_id(r) in req_canon
                 self._record_link(result, art_cov, story_id, r, "cites_req", valid)
             result.artifacts.append(art_cov)
 
@@ -441,10 +482,10 @@ class TraceService:
         for bdd_id, refs in gherkin.items():
             art_cov = ArtifactCoverage(artifact_id=bdd_id, artifact_type="bdd")
             if refs["story_ref"]:
-                valid = refs["story_ref"] in stories
+                valid = _canon_id(refs["story_ref"]) in story_canon
                 self._record_link(result, art_cov, bdd_id, refs["story_ref"], "cites_story", valid)
             if refs["adr_ref"]:
-                valid = refs["adr_ref"] in adrs
+                valid = _canon_id(refs["adr_ref"]) in adr_canon
                 self._record_link(result, art_cov, bdd_id, refs["adr_ref"], "cites_adr", valid)
             result.artifacts.append(art_cov)
 
@@ -655,7 +696,7 @@ class TraceService:
 
         Populates:
           - ``result.per_scenario_alignment``: ``{BDD-NNN: score}``
-          - ``result.gherkin_alignment_pct``: % of features ≥ threshold (0.5)
+          - ``result.gherkin_alignment_pct``: mean per-scenario score (0-100)
         """
         bdd_dir = self._resolve_bdd_dir(workspace)
         if bdd_dir is None:
@@ -708,7 +749,6 @@ class TraceService:
         except (ImportError, AttributeError):
             pass
 
-        alignment_threshold = 0.5
         scores: dict[str, float] = {}
 
         for feat_file in sorted(bdd_dir.glob("*.feature")):
@@ -783,8 +823,14 @@ class TraceService:
 
         result.per_scenario_alignment = scores
         if scores:
-            covered = sum(1 for v in scores.values() if v >= alignment_threshold)
-            result.gherkin_alignment_pct = covered / len(scores) * 100.0
+            # Report the *mean* per-scenario rubric score (0-100), not the
+            # proportion clearing the 0.5 threshold. The threshold collapses the
+            # judge's four-dimension graded signal into yes/no, which (a) flattens
+            # a trivially self-consistent baseline to 100% with no spread and
+            # (b) turns a single sub-0.5 judge wobble into a 0% cliff for an
+            # entire condition. The mean preserves the graded signal and is the
+            # standard way to report an LLM-judge rubric.
+            result.gherkin_alignment_pct = sum(scores.values()) / len(scores) * 100.0
         else:
             result.gherkin_alignment_pct = None
 
@@ -873,7 +919,7 @@ class TraceService:
                 continue
 
             try:
-                prediction = self._llm.call(
+                prediction = await self._llm.predict(
                     ConflictDetection,
                     new_artifact=source_text,
                     new_artifact_id=edge.source,

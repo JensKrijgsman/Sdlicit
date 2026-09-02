@@ -22,6 +22,37 @@ if TYPE_CHECKING:
 _log = get_logger("kb_access")
 
 
+async def retrieve_chunks(
+    query: str,
+    *,
+    kb_router: "KBRouter | StaticContextProvider | None" = None,
+    kb: "KnowledgeBase | None" = None,
+    mode: str = "hybrid",
+    probe_first: bool = True,
+) -> list[Any]:
+    """Retrieve raw KB chunks with automatic router/KB fallback.
+
+    Args:
+        query: Natural language search query.
+        kb_router: Store-aware router (preferred).
+        kb: Raw KnowledgeBase (fallback if no router).
+        mode: LightRAG search mode for raw KB queries.
+        probe_first: Whether router should probe before querying.
+
+    Returns:
+        List of KBChunk objects (each with ``text``, ``source``, ``relevance``).
+        Returns ``[]`` if both kb_router and kb are None, or on error.
+    """
+    try:
+        if kb_router is not None:
+            return await kb_router.query(query, probe_first=probe_first)
+        if kb is not None:
+            return await kb.query(query, mode=mode)
+    except Exception as exc:
+        _log.warning("KB query failed (continuing without): %s", exc)
+    return []
+
+
 async def retrieve_context(
     query: str,
     *,
@@ -45,15 +76,9 @@ async def retrieve_context(
         Concatenated text chunks separated by double-newlines.
         Returns "" if both kb_router and kb are None, or on error.
     """
-    chunks: list[Any] = []
-    try:
-        if kb_router is not None:
-            chunks = await kb_router.query(query, probe_first=probe_first)
-        elif kb is not None:
-            chunks = await kb.query(query, mode=mode)
-    except Exception as exc:
-        _log.warning("KB query failed (continuing without): %s", exc)
-        return ""
+    chunks = await retrieve_chunks(
+        query, kb_router=kb_router, kb=kb, mode=mode, probe_first=probe_first,
+    )
 
     text = "\n\n".join(c.text for c in chunks if c.text)
     if max_chars and len(text) > max_chars:

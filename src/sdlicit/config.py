@@ -22,11 +22,23 @@ class SdlicitConfig(BaseModel):
     provider: Literal["openrouter", "ollama"] = "openrouter"
     model: str = "openai/gpt-5.4-nano"
     model_type: Literal["standard", "thinking"] = "standard"
+    # When True, a model left at the default "standard" type is probed once and
+    # promoted to "thinking" if it emits reasoning tokens. Set False to pin the
+    # type explicitly. Small local reasoning models parse structured output more
+    # reliably under the "standard" (ChainOfThought) contract than under the
+    # "thinking" (bare Predict) path, so the benchmark pins them. See T008.
+    auto_detect_thinking: bool = True
     api_key: str = ""
     ollama_host: str = "http://localhost:11434"
     embed_model: str = "openai/text-embedding-3-large"
     embed_dim: int = 3072
     embed_max_tokens: int = 8192
+    # Embedder provider, decoupled from the generation `provider`. An empty
+    # string means "use `provider`". Set to "openrouter" to keep a local
+    # (ollama) generation model while embedding against the shared,
+    # OpenRouter-built knowledge base, so the query embedder matches the
+    # embedder that built the corpus.
+    embed_provider: str = ""
     kb_working_dir: str = ".sdlicit/knowledge/lightrag_workdir"
     suggestion_threshold: float = 0.5
     log_prompts: bool = False
@@ -113,10 +125,11 @@ class SdlicitConfig(BaseModel):
     def _probe_thinking(self) -> bool:
         """Ask the model for a tiny response; return True if it emits reasoning tokens.
 
-        - OpenRouter: POST /v1/chat/completions with reasoning.enabled=true, check
-          reasoning_tokens / message.reasoning / message.reasoning_details.
+        - OpenRouter: POST /v1/chat/completions with default settings (no forced
+          reasoning), check reasoning_tokens / message.reasoning. Only models that
+          reason by default register, so reasoning-capable standard models do not.
         - Ollama:     POST /api/chat (native endpoint), thinking is on by default for
-          capable models — check message.thinking in the response.
+          capable models, check message.thinking in the response.
 
         Falls back to False on any error so startup is never blocked.
         """
@@ -130,12 +143,20 @@ class SdlicitConfig(BaseModel):
         return False
 
     def _probe_openrouter(self) -> bool:
+        # Detect whether the model reasons BY DEFAULT, not merely whether it can
+        # reason when asked. Forcing reasoning.enabled=true made every
+        # reasoning-capable model (mistral-small, gpt-5.x) report reasoning tokens
+        # and look like a thinking model. So send a plain request with room to
+        # think and check whether reasoning appears unprompted. Genuine reasoning
+        # models (o-series, R1) emit reasoning tokens here; standard models emit
+        # none and answer in plain text.
         payload = json.dumps(
             {
                 "model": self.model,
-                "messages": [{"role": "user", "content": "hi"}],
-                "max_tokens": 5,
-                "reasoning": {"enabled": True, "max_tokens": 50},
+                "messages": [
+                    {"role": "user", "content": "What is 17 times 24? Think first."}
+                ],
+                "max_tokens": 64,
             }
         ).encode()
         req = urllib.request.Request(
@@ -146,7 +167,7 @@ class SdlicitConfig(BaseModel):
                 "Content-Type": "application/json",
             },
         )
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=20) as resp:
             data = json.loads(resp.read())
         choice = (data.get("choices") or [{}])[0]
         message = choice.get("message", {})
@@ -187,7 +208,11 @@ class SdlicitConfig(BaseModel):
             self.ollama_host = env_host
         # Auto-detect thinking models when model_type is not explicitly set.
         # Probe approach is provider-agnostic and future-proof — no regex to maintain.
-        if self.model_type == "standard" and self._probe_thinking():
+        if (
+            self.auto_detect_thinking
+            and self.model_type == "standard"
+            and self._probe_thinking()
+        ):
             self.model_type = "thinking"
 
     @classmethod

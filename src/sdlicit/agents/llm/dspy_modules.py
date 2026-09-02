@@ -7,14 +7,50 @@ code.  BAMLAdapter gives structured output in a single LLM call.
 
 from __future__ import annotations
 
-from typing import Literal
+import re
+from typing import Annotated, Literal
 
 import dspy
-from pydantic import BaseModel, Field, field_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 # ---------------------------------------------------------------------------
 # Output models (Pydantic — used by BAMLAdapter for structured extraction)
 # ---------------------------------------------------------------------------
+
+
+def _coerce_to_str_list(value: object) -> list[str]:
+    """Coerce a list-typed field into a list of strings.
+
+    Small instruction-tuned models (e.g. the 1.2B local fine-tune) often emit
+    list-typed fields as one delimited string instead of a JSON array, which
+    fails strict Pydantic list validation and aborts the stage. This
+    BeforeValidator rescues that output by splitting on newline/semicolon
+    delimiters. It is a no-op for values that are already lists, so capable
+    models that emit proper arrays are unaffected.
+    """
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return []
+        parts = re.split(r"[\n;]+", text)
+        cleaned = [p.strip(" \t-*•").strip() for p in parts]
+        cleaned = [p for p in cleaned if p]
+        return cleaned or [text]
+    return [str(value).strip()]
+
+
+# A list[str] that tolerates a single delimited string from weaker models.
+StrList = Annotated[list[str], BeforeValidator(_coerce_to_str_list)]
 
 
 class StepSuggestionOutput(BaseModel):
@@ -24,7 +60,7 @@ class StepSuggestionOutput(BaseModel):
     message: str = Field(desc="Constructive improvement suggestion (max 100 words)")
     severity: Literal["low", "medium", "high"] = Field(desc="Impact level")
     should_show: bool = Field(desc="False if the user's input is already adequate")
-    references: list[str] = Field(default_factory=list, desc="KB source references")
+    references: StrList = Field(default_factory=list, desc="KB source references")
     needs_socratic: bool = Field(
         default=False,
         desc="True if this field contains ambiguities, assumptions, or gaps "
@@ -72,8 +108,8 @@ class PersonaOutput(BaseModel):
     persona_id: str = Field(default="", desc="ID in PERSONA-NN format")
     name: str
     role: str
-    goals: list[str] = Field(default_factory=list)
-    frustrations: list[str] = Field(default_factory=list)
+    goals: StrList = Field(default_factory=list)
+    frustrations: StrList = Field(default_factory=list)
 
 
 class PersonasOutput(BaseModel):
@@ -91,13 +127,30 @@ class GherkinOutput(BaseModel):
     feature_name: str = Field(desc="Name of the Gherkin feature")
     gherkin: str = Field(desc="Complete Gherkin feature file content")
 
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_str_to_model(cls, data: object) -> object:
+        """Rescue weak models that emit the whole feature as a bare string.
+
+        Sub-2B models sometimes return the raw .feature text instead of a
+        structured object, which fails model validation and aborts the BDD
+        stage. Wrapping the string preserves the generated Gherkin. No-op when
+        the value is already a mapping, so capable models are unaffected.
+        """
+        if isinstance(data, str):
+            text = data.strip()
+            match = re.search(r"Feature:\s*(.+)", text)
+            feature_name = match.group(1).strip() if match else "Generated Feature"
+            return {"feature_name": feature_name, "gherkin": text}
+        return data
+
 
 class UserStoryItem(BaseModel):
     """A single user story."""
 
     story_id: str = Field(desc="ID in STORY-NN format")
     persona_id: str = Field(desc="References one of the provided persona ids")
-    requirement_ids: list[str] = Field(
+    requirement_ids: StrList = Field(
         default_factory=list, desc="Subset of provided requirement ids"
     )
     statement: str = Field(desc="As a <persona>, I want <goal>, so that <benefit>")
@@ -151,12 +204,12 @@ class ADRGenerationOutput(BaseModel):
     title: str = Field(desc="ADR title")
     context: str = Field(desc="Decision context")
     decision: str = Field(desc="The decision made")
-    alternatives: list[str] = Field(
+    alternatives: StrList = Field(
         default_factory=list, desc="Considered alternatives"
     )
     consequences: str = Field(default="", desc="Consequences of the decision")
     # Trace-graph aligned fields (match MADR frontmatter conventions)
-    implements: list[str] = Field(
+    implements: StrList = Field(
         default_factory=list,
         desc="Requirement IDs (REQ-XXX-NN format) from the provided requirements "
         "list that this ADR addresses. ONLY use IDs that appear in the "
@@ -165,7 +218,7 @@ class ADRGenerationOutput(BaseModel):
     supersedes: str = Field(
         default="", desc="ADR ID this decision supersedes (ADR-NNN)"
     )
-    cited_kb_sources: list[str] = Field(
+    cited_kb_sources: StrList = Field(
         default_factory=list, desc="Referenced KB sources (KB:<source>:<chunk>)"
     )
 
@@ -183,7 +236,7 @@ class SOWStakeholder(BaseModel):
     """A stakeholder in the Statement of Work."""
 
     role: str = Field(desc="e.g. 'Project Manager', 'Developer', 'Finance'")
-    needs: list[str] = Field(desc="What this stakeholder needs from the system")
+    needs: StrList = Field(desc="What this stakeholder needs from the system")
 
 
 class SOWOutput(BaseModel):
@@ -192,9 +245,9 @@ class SOWOutput(BaseModel):
     project_name: str
     problem_statement: str = Field(desc="1-2 sentence problem description")
     stakeholders: list[SOWStakeholder] = Field(default_factory=list)
-    constraints: list[str] = Field(default_factory=list)
-    out_of_scope: list[str] = Field(default_factory=list)
-    open_questions: list[str] = Field(desc="Ambiguities that need clarification")
+    constraints: StrList = Field(default_factory=list)
+    out_of_scope: StrList = Field(default_factory=list)
+    open_questions: StrList = Field(desc="Ambiguities that need clarification")
 
 
 class SocraticOutput(BaseModel):

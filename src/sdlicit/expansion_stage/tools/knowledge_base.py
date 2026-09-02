@@ -66,6 +66,10 @@ class KnowledgeBase:
         self._working_dir = working_dir.resolve()
         self._working_dir.mkdir(parents=True, exist_ok=True)
         self._provider = provider
+        # Embedder provider may differ from the generation provider (e.g. a
+        # local ollama model that embeds against a cloud-built KB). Empty
+        # falls back to the generation provider.
+        self._embed_provider = kwargs.get("embed_provider") or provider
         self._model = model
         self._kwargs = kwargs
         self._rag: Any | None = None
@@ -83,7 +87,9 @@ class KnowledgeBase:
 
             ollama_host = self._kwargs.get("ollama_host", "http://localhost:11434")
 
-            if self._provider == "ollama":
+            # Embedder selection is keyed off the embed provider, which may
+            # differ from the generation provider (self._provider).
+            if self._embed_provider == "ollama":
                 embed_name = self._kwargs.get("embed_model", "nomic-embed-text")
                 embed_dim = int(self._kwargs.get("embed_dim", 768))
                 embed_max_tokens = int(self._kwargs.get("embed_max_tokens", 2048))
@@ -1008,5 +1014,6 @@ class KnowledgeBase:
             embed_model=config.embed_model,
             embed_dim=config.embed_dim,
             embed_max_tokens=config.embed_max_tokens,
+            embed_provider=config.embed_provider or config.provider,
             ollama_host=config.ollama_host,
         )

@@ -148,9 +148,11 @@ class LLMGateway:
 
             loop = asyncio.get_running_loop()
             if override_lm is not None:
-                result = await loop.run_in_executor(
-                    None, lambda: dspy.context(lm=override_lm)(lambda: module(**kwargs))()
-                )
+                def _run_with_override() -> dspy.Prediction:
+                    with dspy.context(lm=override_lm):
+                        return module(**kwargs)
+
+                result = await loop.run_in_executor(None, _run_with_override)
             else:
                 result = await loop.run_in_executor(None, lambda: module(**kwargs))
 
@@ -218,9 +220,11 @@ class LLMGateway:
 
             loop = asyncio.get_running_loop()
             if override_lm is not None:
-                result = await loop.run_in_executor(
-                    None, lambda: dspy.context(lm=override_lm)(lambda: react_module(**kwargs))()
-                )
+                def _run_react_with_override() -> dspy.Prediction:
+                    with dspy.context(lm=override_lm):
+                        return react_module(**kwargs)
+
+                result = await loop.run_in_executor(None, _run_react_with_override)
             else:
                 result = await loop.run_in_executor(None, lambda: react_module(**kwargs))
 

@@ -13,9 +13,6 @@
     "engines": {
         "vscode": "^1.85.0"
     },
-    "extensionDependencies": [
-        "tomoki1207.pdf"
-    ],
     "categories": [
         "Other"
     ],
