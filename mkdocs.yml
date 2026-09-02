@@ -1,0 +1,46 @@
+site_name: Sdlicit
+site_description: Knowledge-grounded LLM framework for structured SDLC artifact creation
+repo_url: https://github.com/JensKrijgsman/Sdlicit-public
+edit_uri: edit/master/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - content.action.edit
+
+nav:
+  - Overview: index.md
+  - Getting started: getting-started.md
+  - Architecture: architecture.md
+  - Backend: backend.md
+  - CLI: cli.md
+  - Extension: extension.md
+  - Architecture decisions:
+      - adrs/index.md
+      - "ADR-0001 — Bound and rank prior artifact context": adrs/ADR-0001-bound-and-rank-prior-artifact-context.md
+
+markdown_extensions:
+  - admonition
+  - tables
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight
+  - toc:
+      permalink: true
