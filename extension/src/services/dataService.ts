@@ -25,6 +25,7 @@ const SESSIONS_DIR = path.join(SDLICIT_DIR, 'sessions');
 const INDEX_FILE = path.join(SESSIONS_DIR, 'index.json');
 const CHAT_DIR = path.join(SESSIONS_DIR, 'chat');
 const META_DIR = path.join(SESSIONS_DIR, 'sdlicit');
+const BDD_REVIEWS_FILE = path.join(SDLICIT_DIR, 'bdd_reviews.json');
 
 export class DataService {
     private workspaceRoot: string | undefined;
@@ -60,7 +61,7 @@ export class DataService {
     }
 
     /** Compute reverse traces for an artifact: find all other artifacts that reference it. */
-    getReversTraces(artifactId: string): { implementedBy: string[]; testedBy: string[]; referencedBy: string[] } {
+    getReverseTraces(artifactId: string): { implementedBy: string[]; testedBy: string[]; referencedBy: string[] } {
         const all = this.getArtifacts();
         const implementedBy: string[] = [];
         const testedBy: string[] = [];
@@ -122,7 +123,7 @@ export class DataService {
         const fileContent = this.getArtifactContent(artifact.filePath);
         const lines = fileContent.split('\n');
         const sectionHeading = `## ${sectionId}`;
-        let startIdx = lines.findIndex(l => l.trim().startsWith('## ') && l.trim().toLowerCase().includes(sectionId.toLowerCase()));
+        const startIdx = lines.findIndex(l => l.trim().startsWith('## ') && l.trim().toLowerCase().includes(sectionId.toLowerCase()));
         if (startIdx === -1) { return; }
         // Find next section heading
         let endIdx = lines.findIndex((l, i) => i > startIdx && l.trim().startsWith('## '));
@@ -553,7 +554,12 @@ export class DataService {
         return {
             coverage,
             qualityOverview: quality,
-            openQuestions: [], // TODO: extract from Socratic probes
+            // Socratic probes currently live only in each panel's in-memory
+            // state (this.socratic.probe in sowPanelProvider etc), not
+            // persisted anywhere this service can read after the fact.
+            // Tracking these across sessions needs a real logging/resolution
+            // lifecycle, not just reading this array — left as future work.
+            openQuestions: [],
             recentActivity,
         };
     }
@@ -661,9 +667,36 @@ export class DataService {
         return this.parseGherkinResponse(requirementId, artifact.title, gherkinText);
     }
 
-    /** Review a BDD scenario (accept/reject). */
+    /** Review a BDD scenario (accept/reject). Persisted locally, keyed by scenario id. */
     async reviewScenario(scenarioId: string, verdict: string, importance?: string, note?: string): Promise<void> {
-        // TODO: persist review decisions to file
+        if (!this.workspaceRoot) { return; }
+        const reviews = this.loadBddReviews();
+        const existing = reviews[scenarioId] ?? {};
+        reviews[scenarioId] = {
+            verdict,
+            importance: importance ?? existing.importance,
+            note: note ?? existing.note,
+            reviewedAt: new Date().toISOString(),
+        };
+        const filePath = path.join(this.workspaceRoot, BDD_REVIEWS_FILE);
+        try {
+            fs.mkdirSync(path.dirname(filePath), { recursive: true });
+            fs.writeFileSync(filePath, JSON.stringify(reviews, null, 2), 'utf-8');
+        } catch (err: any) {
+            this.client.log(`Could not persist BDD review for ${scenarioId}: ${err.message}`);
+        }
+    }
+
+    /** Load previously persisted BDD scenario review decisions, keyed by scenario id. */
+    loadBddReviews(): Record<string, { verdict: string; importance?: string; note?: string; reviewedAt: string }> {
+        if (!this.workspaceRoot) { return {}; }
+        const filePath = path.join(this.workspaceRoot, BDD_REVIEWS_FILE);
+        if (!fs.existsSync(filePath)) { return {}; }
+        try {
+            return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        } catch {
+            return {};
+        }
     }
 
     private parseGherkinResponse(requirementId: string, title: string, gherkinText: string): BddFeature {

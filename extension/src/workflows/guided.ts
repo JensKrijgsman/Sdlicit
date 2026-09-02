@@ -63,7 +63,7 @@ export async function runGuidedFlow(
             label: '6. Generate BDD Scenarios',
             description: 'Create Gherkin scenarios from stories and requirements',
             artifactType: 'gherkin',
-            run: () => runGenerateGherkin(client, store, projectDir),
+            run: () => runGenerateGherkin(client, store, projectDir, kbSync),
         },
     ];
 

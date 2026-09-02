@@ -4,6 +4,12 @@
     "description": "VS Code frontend for the Sdlicit SDLC artifact framework — create SOWs, ADRs, SRS, BDD scenarios with AI-powered Socratic elicitation and knowledge-base grounding.",
     "publisher": "sdlicit",
     "version": "0.5.0",
+    "license": "AGPL-3.0-or-later",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/JensKrijgsman/Sdlicit-public.git",
+        "directory": "extension"
+    },
     "engines": {
         "vscode": "^1.85.0"
     },
@@ -134,6 +140,12 @@
                 "icon": "$(beaker)"
             },
             {
+                "command": "sdlicit.reviewBDDScenarios",
+                "title": "Review BDD Scenarios",
+                "category": "Sdlicit",
+                "icon": "$(checklist)"
+            },
+            {
                 "command": "sdlicit.showEventDetail",
                 "title": "Show Event Detail",
                 "category": "Sdlicit"
@@ -236,24 +248,6 @@
                 "title": "Delete Artifact",
                 "category": "Sdlicit",
                 "icon": "$(trash)"
-            },
-            {
-                "command": "sdlicit.acceptPendingArtifact",
-                "title": "Accept Artifact",
-                "category": "Sdlicit",
-                "icon": "$(check)"
-            },
-            {
-                "command": "sdlicit.declinePendingArtifact",
-                "title": "Decline Artifact",
-                "category": "Sdlicit",
-                "icon": "$(close)"
-            },
-            {
-                "command": "sdlicit.regeneratePendingArtifact",
-                "title": "Regenerate Artifact",
-                "category": "Sdlicit",
-                "icon": "$(sync)"
             }
         ],
         "viewsContainers": {
@@ -396,6 +390,11 @@
                     "command": "sdlicit.generateScenarios",
                     "when": "viewItem == sdlcArtifact.requirement",
                     "group": "1_actions@1"
+                },
+                {
+                    "command": "sdlicit.reviewBDDScenarios",
+                    "when": "viewItem == sdlcArtifact.requirement",
+                    "group": "1_actions@2"
                 },
                 {
                     "command": "sdlicit.expandADR",

@@ -6,6 +6,7 @@
 // ---------------------------------------------------------------------------
 
 import * as vscode from 'vscode';
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { SdlicitClient } from './sdlicitClient';
@@ -15,7 +16,7 @@ export type KBFileStatus = 'synced' | 'uploading' | 'pending' | 'error';
 export interface KBFileEntry {
     fileName: string;
     filePath: string;
-    relativePah: string;
+    relativePath: string;
     status: KBFileStatus;
     lastSynced?: string;
     error?: string;
@@ -89,7 +90,6 @@ export class KBSyncService {
     }
 
     private hashContent(content: string): string {
-        const crypto = require('crypto');
         return crypto.createHash('sha256').update(content).digest('hex').slice(0, 16);
     }
 
@@ -129,7 +129,7 @@ export class KBSyncService {
             const entry: KBFileEntry = {
                 fileName: file.name,
                 filePath,
-                relativePah: relativePath,
+                relativePath: relativePath,
                 status,
                 lastSynced: manifestEntry?.syncedAt,
             };
@@ -161,7 +161,7 @@ export class KBSyncService {
         const entry: KBFileEntry = {
             fileName,
             filePath: destPath,
-            relativePah: path.relative(this.projectDir!, destPath),
+            relativePath: path.relative(this.projectDir!, destPath),
             status: 'pending',
         };
         this.statusMap.set(fileName, entry);
@@ -187,7 +187,7 @@ export class KBSyncService {
         const entry: KBFileEntry = {
             fileName,
             filePath,
-            relativePah: path.relative(this.projectDir!, filePath),
+            relativePath: path.relative(this.projectDir!, filePath),
             status: alreadySynced ? 'synced' : 'pending',
             lastSynced: alreadySynced ? manifestEntry.syncedAt : undefined,
         };
@@ -245,7 +245,7 @@ export class KBSyncService {
             const updated: KBFileEntry = {
                 fileName,
                 filePath,
-                relativePah: path.relative(this.projectDir, filePath),
+                relativePath: path.relative(this.projectDir, filePath),
                 status: 'synced',
                 lastSynced: new Date().toISOString(),
             };
@@ -257,7 +257,7 @@ export class KBSyncService {
             const errorEntry: KBFileEntry = {
                 fileName,
                 filePath,
-                relativePah: path.relative(this.projectDir!, filePath),
+                relativePath: path.relative(this.projectDir!, filePath),
                 status: 'error',
                 error: err.message,
             };
@@ -330,7 +330,7 @@ export class KBSyncService {
                     const entry: KBFileEntry = {
                         fileName,
                         filePath,
-                        relativePah: path.relative(this.projectDir!, filePath),
+                        relativePath: path.relative(this.projectDir!, filePath),
                         status: 'synced',
                         lastSynced: new Date().toISOString(),
                     };
@@ -344,7 +344,7 @@ export class KBSyncService {
                     const entry: KBFileEntry = {
                         fileName,
                         filePath,
-                        relativePah: path.relative(this.projectDir!, filePath),
+                        relativePath: path.relative(this.projectDir!, filePath),
                         status: 'pending',
                     };
                     this.statusMap.set(fileName, entry);

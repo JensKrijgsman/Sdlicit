@@ -153,10 +153,14 @@ export class DashboardProvider implements vscode.WebviewViewProvider {
             </div>`;
 
         // ── Questions tab ──
+        // Socratic probes are tracked per-panel while a panel is open, not
+        // persisted across sessions yet, so this list only ever reflects
+        // probes surfaced during panels still open right now, not a full
+        // history. See DashboardSummary.openQuestions.
         const unresolved = openQuestions.filter(q => !('resolved' in q));
         const questionsHtml = `
             <h3>Open Questions (${unresolved.length})</h3>
-            ${unresolved.length === 0 ? '<div class="text-muted text-sm">No open questions</div>' : ''}
+            ${unresolved.length === 0 ? '<div class="text-muted text-sm">No open questions from panels currently open. Socratic questions are not yet tracked across sessions.</div>' : ''}
             ${unresolved.map(q => `
                 <div class="card-flat" style="cursor:pointer" data-action="openQuestion" data-artifact-id="${escapeHtml(q.artifactId)}">
                     <div class="flex items-center gap-sm">

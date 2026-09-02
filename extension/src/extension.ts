@@ -17,6 +17,7 @@ import { DataService } from './services/dataService';
 import { KBSyncService } from './services/kbSyncService';
 import { ArtifactTreeProvider } from './providers/artifactTreeProvider';
 import { CanvasProvider } from './providers/canvasProvider';
+import { BddReviewProvider } from './providers/bddReviewProvider';
 import { DashboardProvider } from './providers/dashboardProvider';
 import { ChatPanelProvider } from './providers/chatPanelProvider';
 import { SessionTreeProvider } from './providers/sessionTreeProvider';
@@ -24,11 +25,10 @@ import { StatusPanelProvider } from './providers/statusPanelProvider';
 import { TraceGraphProvider } from './providers/traceGraphProvider';
 import { KnowledgeBrowserProvider } from './providers/knowledgeBrowserProvider';
 import { KBDecorationProvider } from './providers/kbDecorationProvider';
-import { PendingArtifactLensProvider } from './providers/pendingArtifactLens';
 import { TraceLensProvider } from './providers/traceLensProvider';
 import { TraceHoverProvider } from './providers/traceHoverProvider';
 import { TraceCoverageDecorationProvider } from './providers/traceCoverageProvider';
-import { runCreateSOW, setLensProvider } from './workflows/intake';
+import { runCreateSOW } from './workflows/intake';
 import { runCreateADR, runSuggestDirections } from './workflows/composing';
 import { runGenerateSRS, runGeneratePersonas, runGenerateStories, runGenerateGherkin } from './workflows/generation';
 import { runQueryKB, runIngestKB, runExpandADR } from './workflows/expansion';
@@ -79,6 +79,7 @@ export function activate(context: vscode.ExtensionContext) {
     // --- Providers ---
     const artifactTree = new ArtifactTreeProvider(data, client);
     const canvas = new CanvasProvider(data);
+    const bddReview = new BddReviewProvider(data);
 
     // Sync KB status whenever server reconnects
     lifecycle.onStateChange(state => {
@@ -146,17 +147,6 @@ export function activate(context: vscode.ExtensionContext) {
     // Expose to ChatPanelProvider
     chatPanel.setSourcePreviewProvider(sourcePreviewProvider, sourcePreviewContents);
 
-    // --- Pending Artifact CodeLens Provider (inline Accept/Decline like Copilot) ---
-    const pendingLens = new PendingArtifactLensProvider();
-    setLensProvider(pendingLens);
-    context.subscriptions.push(pendingLens);
-    context.subscriptions.push(
-        vscode.languages.registerCodeLensProvider(
-            { scheme: 'file', pattern: '**/.sdlicit/artifacts/**' },
-            pendingLens,
-        ),
-    );
-
     // --- Trace Link CodeLens & Hover Providers ---
     const traceLens = new TraceLensProvider(data, client);
     const traceHover = new TraceHoverProvider(data);
@@ -210,17 +200,18 @@ export function activate(context: vscode.ExtensionContext) {
         }),
     );
 
-    // Open Canvas (artifact by ID) — routes SOW/ADR to dedicated panels
+    // Open Canvas (artifact by ID) — the rich structured editing surface,
+    // distinct from the per-type read-oriented view panels (viewADR etc).
     context.subscriptions.push(
         vscode.commands.registerCommand('sdlicit.openCanvas', async (artifactId: string) => {
             if (!artifactId) {
                 const artifacts = data.getArtifacts();
                 const items = artifacts.map(a => ({ label: a.title, description: a.id, id: a.id }));
-                const picked = await vscode.window.showQuickPick(items, { title: 'Open Artifact' });
+                const picked = await vscode.window.showQuickPick(items, { title: 'Open in Canvas' });
                 if (!picked) { return; }
                 artifactId = picked.id;
             }
-            // Route SOW, ADR, and SRS to their dedicated panels
+
             let artifact = data.getArtifact(artifactId);
 
             // If not found by exact ID, try fuzzy matching for requirement IDs
@@ -255,25 +246,7 @@ export function activate(context: vscode.ExtensionContext) {
                 }
             }
 
-            if (artifact?.type === 'sow') {
-                return vscode.commands.executeCommand('sdlicit.viewSOW', artifact.filePath);
-            }
-            if (artifact?.type === 'decision') {
-                return vscode.commands.executeCommand('sdlicit.viewADR', artifact.filePath);
-            }
-            if (artifact?.type === 'requirement') {
-                return vscode.commands.executeCommand('sdlicit.viewSRS', artifact.filePath);
-            }
-            if (artifact?.type === 'personas') {
-                return vscode.commands.executeCommand('sdlicit.viewPersonas', artifact.filePath);
-            }
-            if (artifact?.type === 'stories') {
-                return vscode.commands.executeCommand('sdlicit.viewStories', artifact.filePath);
-            }
-            if (artifact?.type === 'scenario') {
-                return vscode.commands.executeCommand('sdlicit.viewBDD', artifact.filePath);
-            }
-            await canvas.openArtifact(artifactId);
+            await canvas.openArtifact(artifact.id);
         }),
     );
 
@@ -326,7 +299,7 @@ export function activate(context: vscode.ExtensionContext) {
                     case 'srs': return runGenerateSRS(client, store, workspaceRoot, kbSync, context.globalStorageUri.fsPath, artifactTree);
                     case 'personas': return runGeneratePersonas(client, store, workspaceRoot, kbSync, context.globalStorageUri.fsPath, artifactTree);
                     case 'stories': return runGenerateStories(client, store, workspaceRoot, kbSync, context.globalStorageUri.fsPath, artifactTree);
-                    case 'gherkin': return runGenerateGherkin(client, store, workspaceRoot, artifactTree);
+                    case 'gherkin': return runGenerateGherkin(client, store, workspaceRoot, kbSync, context.globalStorageUri.fsPath, artifactTree);
                 }
             });
             session.logEvent(`${choice.action}_complete`);
@@ -389,9 +362,24 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('sdlicit.generateScenarios', async () => {
             if (!store || !workspaceRoot) { return showNoWorkspace(); }
             session.logEvent('bdd_generate_start');
-            await withSpinner(() => runGenerateGherkin(client, store, workspaceRoot, artifactTree));
+            await withSpinner(() => runGenerateGherkin(client, store, workspaceRoot, kbSync, context.globalStorageUri.fsPath, artifactTree));
             session.logEvent('bdd_generate_complete');
             artifactTree.refresh();
+        }),
+    );
+
+    // BDD Review (step-by-step verdict/importance/notes per scenario)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('sdlicit.reviewBDDScenarios', async (requirementId?: string) => {
+            if (!workspaceRoot) { return showNoWorkspace(); }
+            if (!requirementId) {
+                const candidates = data.getArtifacts().filter(a => a.type === 'requirement');
+                const items = candidates.map(a => ({ label: a.title, description: a.id, id: a.id }));
+                const picked = await vscode.window.showQuickPick(items, { title: 'Review BDD Scenarios' });
+                if (!picked) { return; }
+                requirementId = picked.id;
+            }
+            await withSpinner(() => bddReview.openReview(requirementId!));
         }),
     );
 
@@ -698,13 +686,6 @@ export function activate(context: vscode.ExtensionContext) {
         }),
     );
 
-    // Legacy: Insert content from chat into SOW section
-    context.subscriptions.push(
-        vscode.commands.registerCommand('sdlicit.insertToSOWSection', (ctx: { sectionKey: string; content: string }) => {
-            activeSowPanel?.updateSectionFromExternal(ctx.sectionKey, ctx.content);
-        }),
-    );
-
     // Open existing SOW in read-only panel
     let activeSrsPanel: import('./providers/srsPanelProvider').SRSPanelProvider | undefined;
     let activePersonasPanel: import('./providers/personasPanelProvider').PersonasPanelProvider | undefined;
@@ -969,44 +950,6 @@ export function activate(context: vscode.ExtensionContext) {
                 const doc = await vscode.workspace.openTextDocument(uri);
                 await vscode.window.showTextDocument(doc, { preview: true });
             }
-        }),
-    );
-
-    // --- Pending Artifact Accept / Decline / Regenerate Commands ---
-    context.subscriptions.push(
-        vscode.commands.registerCommand('sdlicit.acceptPendingArtifact', async (filePath: string) => {
-            const artifact = pendingLens.getPending(filePath);
-            if (!artifact) { return; }
-            if (artifact.onAccept) { await artifact.onAccept(); }
-            pendingLens.removePending(filePath);
-            artifactTree.refresh();
-        }),
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand('sdlicit.declinePendingArtifact', async (filePath: string) => {
-            const artifact = pendingLens.getPending(filePath);
-            if (!artifact) { return; }
-            if (artifact.onDecline) { await artifact.onDecline(); }
-            pendingLens.removePending(filePath);
-            artifactTree.refresh();
-        }),
-    );
-
-    context.subscriptions.push(
-        vscode.commands.registerCommand('sdlicit.regeneratePendingArtifact', async (filePath: string) => {
-            const artifact = pendingLens.getPending(filePath);
-            if (!artifact || !artifact.onRegenerate) { return; }
-            const notes = await vscode.window.showInputBox({
-                title: 'Sdlicit — Regeneration Notes',
-                prompt: 'What should be changed?',
-                placeHolder: 'e.g., "Add more detail about constraints" or "Make scope narrower"',
-            });
-            if (!notes) { return; }
-            await vscode.window.withProgress(
-                { location: vscode.ProgressLocation.Notification, title: 'Sdlicit: Regenerating…' },
-                () => artifact.onRegenerate!(notes),
-            );
         }),
     );
 

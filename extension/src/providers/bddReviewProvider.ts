@@ -24,6 +24,17 @@ export class BddReviewProvider {
     async openReview(requirementId: string): Promise<void> {
         this.feature = await this.data.generateScenarios(requirementId);
 
+        // Restore any previously persisted verdicts/importance/notes for these scenarios.
+        const reviews = this.data.loadBddReviews();
+        for (const scn of this.feature.scenarios) {
+            const saved = reviews[scn.id];
+            if (saved) {
+                scn.status = saved.verdict as BddScenario['status'];
+                scn.importance = saved.importance as BddScenario['importance'];
+                scn.reviewNote = saved.note;
+            }
+        }
+
         if (this.panel) {
             this.panel.reveal(vscode.ViewColumn.One);
         } else {

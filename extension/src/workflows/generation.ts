@@ -92,7 +92,14 @@ export async function runGenerateStories(
 
 // --- Gherkin/BDD Generation (Panel-based) ---
 
-export async function runGenerateGherkin(client: SdlicitClient, store: ArtifactStore, projectDir: string, artifactTree?: ArtifactTreeProvider): Promise<void> {
+export async function runGenerateGherkin(
+    client: SdlicitClient,
+    store: ArtifactStore,
+    projectDir: string,
+    kbSync?: KBSyncService,
+    globalStoragePath?: string,
+    artifactTree?: ArtifactTreeProvider,
+): Promise<void> {
     const srsContent = store.getLatestSRS();
     if (!srsContent) {
         vscode.window.showWarningMessage('Sdlicit: No SRS found. Generate one first before creating BDD scenarios.');
@@ -104,7 +111,7 @@ export async function runGenerateGherkin(client: SdlicitClient, store: ArtifactS
         .map(a => store.readArtifact(a.filePath))
         .filter((c): c is string => c !== null);
 
-    const bddPanel = new BddPanelProvider(client, store);
+    const bddPanel = new BddPanelProvider(client, store, kbSync, globalStoragePath);
     const result = await bddPanel.startGeneration(srsContent, personas);
 
     if (result === 'accepted') {

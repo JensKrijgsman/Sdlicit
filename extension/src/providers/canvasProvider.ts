@@ -394,7 +394,7 @@ export class CanvasProvider {
         const { upstream, downstream, implements: impl, testedBy, supersedes } = artifact.traces;
 
         // Compute reverse traces
-        const reverse = this.data.getReversTraces(artifact.id);
+        const reverse = this.data.getReverseTraces(artifact.id);
 
         const hasTraces = upstream.length > 0 || downstream.length > 0 || impl.length > 0 ||
             testedBy.length > 0 || !!supersedes ||
