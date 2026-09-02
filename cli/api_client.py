@@ -13,7 +13,7 @@ Stage modules can still emit stage-level events through
 from __future__ import annotations
 
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from typing import Any
 
 import httpx
@@ -238,10 +238,8 @@ class SdlicitClient:
         def _iter_events(resp: httpx.Response) -> Iterator[dict[str, Any]]:
             for line in resp.iter_lines():
                 if line and line.startswith("data: "):
-                    try:
+                    with suppress(_json.JSONDecodeError):
                         yield _json.loads(line[6:])
-                    except _json.JSONDecodeError:
-                        pass
 
         try:
             with httpx.stream(

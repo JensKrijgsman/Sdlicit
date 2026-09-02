@@ -9,6 +9,7 @@ Wraps KnowledgeBase to provide:
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import re
@@ -400,10 +401,8 @@ class KBRouter:
             removed += 1
 
             # Remove the sidecar file
-            try:
+            with contextlib.suppress(OSError):
                 sidecar.unlink()
-            except OSError:
-                pass
 
             _log.info(
                 "Stale artifact removed: %s/%s (%d chunk(s) purged)",

@@ -38,10 +38,9 @@ async def _lifespan(application: FastAPI):
     """Graceful shutdown: persist ToM session if still open."""
     yield
     orch = application.state.orchestrator
-    if orch is not None and orch.tom is not None:
-        if orch.tom._raw_session is not None:
-            _log.info("Shutdown: ending open ToM session")
-            await orch.tom.end_session()
+    if orch is not None and orch.tom is not None and orch.tom._raw_session is not None:
+        _log.info("Shutdown: ending open ToM session")
+        await orch.tom.end_session()
 
 
 # ---------------------------------------------------------------------------

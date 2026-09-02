@@ -12,6 +12,7 @@ The CLI is the **only** writer of session data under
 from __future__ import annotations
 
 import atexit
+import contextlib
 import os
 import shutil
 import signal
@@ -323,15 +324,11 @@ def _persist_end_of_session(client: SdlicitClient, journal: Journal) -> None:
         console.print(f"[yellow]/session/end failed:[/yellow] {exc}")
         result = {}
     if result.get("session_model"):
-        try:
+        with contextlib.suppress(Exception):  # noqa: BLE001
             journal.write_tom_analysis(result["session_model"])
-        except Exception:  # noqa: BLE001
-            pass
     if result.get("user_model"):
-        try:
+        with contextlib.suppress(Exception):  # noqa: BLE001
             journal.write_user_model(result["user_model"])
-        except Exception:  # noqa: BLE001
-            pass
     journal.mark_closed("closed")
 
 
@@ -349,10 +346,8 @@ def _install_shutdown_handlers(client: SdlicitClient, journal: Journal) -> None:
         try:
             _persist_end_of_session(client, journal)
         except Exception:  # noqa: BLE001
-            try:
+            with contextlib.suppress(Exception):  # noqa: BLE001
                 journal.mark_closed("interrupted")
-            except Exception:  # noqa: BLE001
-                pass
 
     atexit.register(_shutdown)
 
@@ -362,10 +357,8 @@ def _install_shutdown_handlers(client: SdlicitClient, journal: Journal) -> None:
         os.kill(os.getpid(), signum)
 
     for sig in (signal.SIGINT, signal.SIGTERM):
-        try:
+        with contextlib.suppress(OSError, ValueError):
             signal.signal(sig, _signal_handler)
-        except (OSError, ValueError):
-            pass
 
 
 # -- Menu entry type: (key, label, description, callable) ----------------------

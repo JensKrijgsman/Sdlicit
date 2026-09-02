@@ -7,6 +7,7 @@ artifact and must explicitly choose what to do with it. Editing opens
 
 from __future__ import annotations
 
+import contextlib
 import os
 import subprocess
 import tempfile
@@ -92,10 +93,8 @@ def _edit_in_external_editor(content: str, *, suffix: str = ".md") -> str | None
             with open(tmp_path, encoding="utf-8") as f:
                 return f.read()
         finally:
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tmp_path)
-            except OSError:
-                pass
     except (OSError, FileNotFoundError) as exc:
         console.print(f"[red]Could not launch editor:[/red] {exc}")
         return None

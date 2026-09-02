@@ -27,6 +27,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from sdlicit.helpers import slugify as _slugify_base
+
 # ── Supported artifact types ───────────────────────────────────────────────
 
 ArtifactType = Literal["sow", "srs", "adr", "personas", "stories", "bdd"]
@@ -60,9 +62,6 @@ class ArtifactMeta(BaseModel):
 
 
 # ── Slug helpers ───────────────────────────────────────────────────────────
-
-from sdlicit.helpers import slugify as _slugify_base
-
 
 def _slugify(text: str, max_len: int = 40) -> str:
     """Convert arbitrary text to a filesystem-safe slug."""

@@ -11,6 +11,7 @@ at the start of the create-ADR wizard.
 
 from __future__ import annotations
 
+import contextlib
 from typing import TYPE_CHECKING, Any
 
 from rich.console import Console
@@ -54,17 +55,13 @@ def _load_downstream_artifacts(working_dir: str) -> str:
 
     p_md = personas_md_path(working_dir)
     if p_md.is_file():
-        try:
+        with contextlib.suppress(OSError):
             parts.append("# Personas\n\n" + p_md.read_text(encoding="utf-8"))
-        except OSError:
-            pass
 
     s_md = stories_md_path(working_dir)
     if s_md.is_file():
-        try:
+        with contextlib.suppress(OSError):
             parts.append("# User Stories\n\n" + s_md.read_text(encoding="utf-8"))
-        except OSError:
-            pass
 
     g_dir = gherkin_dir(working_dir)
     if g_dir.is_dir():

@@ -219,23 +219,21 @@ class TraceGraph:
 
         # Generic traces
         traces_from = parsed.get("traces_from", "")
-        if traces_from:
-            if isinstance(traces_from, str):
-                for t in traces_from.split(","):
-                    t = t.strip()
-                    if t:
-                        self.edges.append(
-                            TraceEdge(source=t, target=node_id, edge_type="TRACES_TO")
-                        )
+        if traces_from and isinstance(traces_from, str):
+            for t in traces_from.split(","):
+                t = t.strip()
+                if t:
+                    self.edges.append(
+                        TraceEdge(source=t, target=node_id, edge_type="TRACES_TO")
+                    )
 
         traces_to = parsed.get("traces_to", "")
-        if traces_to:
-            if isinstance(traces_to, str):
-                for t in traces_to.split(","):
-                    t = t.strip()
-                    if t:
-                        self.edges.append(
-                            TraceEdge(source=node_id, target=t, edge_type="TRACES_TO")
+        if traces_to and isinstance(traces_to, str):
+            for t in traces_to.split(","):
+                t = t.strip()
+                if t:
+                    self.edges.append(
+                        TraceEdge(source=node_id, target=t, edge_type="TRACES_TO")
                         )
 
     def _add_feature_file(self, file_path: Path, base_dir: Path) -> None:

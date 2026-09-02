@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
 
+from sdlicit.helpers import slugify as _slugify
 from sdlicit.helpers.parsers import parse_madr_content
 from sdlicit.logging import get_logger
 
@@ -36,13 +37,6 @@ class Chunker(Protocol):
     """Strategy that splits an artifact's text into structured chunks."""
 
     def chunk(self, text: str, base_path: str) -> list[Chunk]: ...
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-from sdlicit.helpers import slugify as _slugify
 
 
 def _split_on_h2(text: str) -> list[tuple[str, str]]:

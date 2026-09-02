@@ -15,6 +15,7 @@ and may also produce a probe.
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import asdict
 from typing import TYPE_CHECKING
 
@@ -224,13 +225,11 @@ class SOWAgent:
 
         # ToM consultation (short briefs)
         if self._tom is not None and len(raw_text.strip()) < 100:
-            try:
+            with contextlib.suppress(Exception):
                 await self._tom.consult(
                     ToMSOWBriefConsult,
                     brief_length=len(raw_text),
                 )
-            except Exception:
-                pass
 
         # Socratic input judge — if brief is inadequate, yield probe and stop
         if self._socratic is not None:

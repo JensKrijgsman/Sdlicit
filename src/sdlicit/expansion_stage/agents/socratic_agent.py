@@ -176,9 +176,8 @@ class SocraticAgent:
         """Return ``(grounded, ungrounded_claims)``."""
         if self._judge_mode == "heuristic":
             return True, []  # no LLM-based grounding check
-        if self._judge_mode == "hybrid":
-            if len(llm_output) > _OUTPUT_GROUND_SKIP:
-                return True, []  # cost guard
+        if self._judge_mode == "hybrid" and len(llm_output) > _OUTPUT_GROUND_SKIP:
+            return True, []  # cost guard
 
         try:
             result = await self._llm.predict(

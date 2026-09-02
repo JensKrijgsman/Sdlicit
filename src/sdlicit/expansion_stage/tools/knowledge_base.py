@@ -7,6 +7,7 @@ knowledge corpus (ISO standards, design patterns, user documents).
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import re
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
@@ -35,9 +36,7 @@ class KBChunk:
     store: str = "all"  # "knowledge", "artifacts", or "all"
 
 
-import re as _re
-
-_INLINE_REF_RE = _re.compile(r"\*\s*\[\d+\]\s*((?:knowledge|artifacts)/\S+)")
+_INLINE_REF_RE = re.compile(r"\*\s*\[\d+\]\s*((?:knowledge|artifacts)/\S+)")
 
 
 def _extract_inline_sources(text: str) -> list[str]:
@@ -124,10 +123,8 @@ class KnowledgeBase:
                         )
                         return np.array(data["embeddings"])
                     finally:
-                        try:
+                        with contextlib.suppress(Exception):
                             await client._client.aclose()
-                        except Exception:
-                            pass
 
                 embed_fn = EmbeddingFunc(
                     embedding_dim=embed_dim,
@@ -836,10 +833,8 @@ class KnowledgeBase:
         finally:
             if not process_task.done():
                 process_task.cancel()
-                try:
+                with contextlib.suppress(asyncio.CancelledError, Exception):
                     await process_task
-                except (asyncio.CancelledError, Exception):
-                    pass
 
     def has_data(self) -> bool:
         """Quick check whether the KB working dir contains indexed data."""
