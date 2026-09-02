@@ -20,16 +20,16 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from sdlicit.helpers.artifact_naming import ArtifactType
 from sdlicit.helpers.artifact_store import (
     ADRArtifact,
     ArtifactStore,
     BDDArtifact,
     PersonasArtifact,
-    SRSArtifact,
     SOWArtifact,
+    SRSArtifact,
     StoriesArtifact,
 )
-from sdlicit.helpers.artifact_naming import ArtifactType
 
 router = APIRouter(prefix="/artifacts", tags=["artifacts"])
 
@@ -100,7 +100,7 @@ def _build_artifact(artifact_type: ArtifactType, data: dict[str, Any]):
     try:
         return cls.model_validate(data)
     except Exception as e:
-        raise HTTPException(status_code=422, detail=f"Invalid artifact data: {e}")
+        raise HTTPException(status_code=422, detail=f"Invalid artifact data: {e}") from e
 
 
 # ── Endpoints ──────────────────────────────────────────────────────────────

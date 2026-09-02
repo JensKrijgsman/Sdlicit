@@ -27,8 +27,9 @@ from typing import Any, Literal
 
 import dspy
 
-from sdlicit.logging.usage import current as _current_usage, estimate_tokens
 from sdlicit.logging import get_logger
+from sdlicit.logging.usage import current as _current_usage
+from sdlicit.logging.usage import estimate_tokens
 
 _log = get_logger("tool")
 

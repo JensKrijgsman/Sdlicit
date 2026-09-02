@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import AsyncIterator
 from pathlib import Path
-from typing import AsyncIterator
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
@@ -26,35 +26,34 @@ from sdlicit.logging import get_logger
 from sdlicit.orchestrator import Orchestrator
 
 from .models import (
-    ExpandRequest,
-    ExpandResponse,
-    KBQueryRequest,
-    KBQueryResponse,
-    KBChunk,
-    KBIngestRequest,
-    KBIngestResponse,
-    KBScanResponse,
-    KBStatusResponse,
-    RAGQueryRequest,
-    RAGQueryResponse,
-    RAGChunk,
-    IngestArtifactRequest,
-    IngestArtifactResponse,
-    SupersedeADRRequest,
-    SupersedeADRResponse,
-    DeleteArtifactRequest,
-    DeleteArtifactResponse,
+    ArtifactCoverageResponse,
     ArtifactKBStatusEntry,
     ArtifactKBStatusResponse,
+    DeleteArtifactRequest,
+    DeleteArtifactResponse,
+    ExpandRequest,
+    ExpandResponse,
+    IngestArtifactRequest,
+    IngestArtifactResponse,
+    KBChunk,
+    KBIngestRequest,
+    KBQueryRequest,
+    KBQueryResponse,
+    KBScanResponse,
+    KBStatusResponse,
     LocateChunkRequest,
     LocateChunkResponse,
-    TraceGraphResponse,
+    RAGChunk,
+    RAGQueryRequest,
+    RAGQueryResponse,
+    SupersedeADRRequest,
+    SupersedeADRResponse,
     TraceCheckRequest,
     TraceCheckResponse,
     TraceCheckResult,
     TraceCoverageRequest,
     TraceCoverageResponse,
-    ArtifactCoverageResponse,
+    TraceGraphResponse,
 )
 from .service import expand_adr
 

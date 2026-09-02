@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  vsix:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: extension/package-lock.json
+      - run: npm ci
+      - run: npx @vscode/vsce package --no-dependencies --out sdlicit.vsix
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdlicit-vsix
+          path: extension/sdlicit.vsix
+
+  cli-binary:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset_name: sdlicit-cli-linux-x64
+          - os: windows-latest
+            asset_name: sdlicit-cli-windows-x64.exe
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - run: uv python install 3.12
+      - name: Install CLI dependencies + PyInstaller
+        run: uv sync --group dev
+      - name: Install PyInstaller
+        run: uv pip install pyinstaller
+      - name: Build binary
+        working-directory: cli
+        run: uv run pyinstaller --onefile --name sdlicit-cli cli_client.py
+      - name: Rename artifact
+        shell: bash
+        run: |
+          mkdir -p out
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            cp cli/dist/sdlicit-cli.exe "out/${{ matrix.asset_name }}"
+          else
+            cp cli/dist/sdlicit-cli "out/${{ matrix.asset_name }}"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset_name }}
+          path: out/${{ matrix.asset_name }}
+
+  release:
+    needs: [vsix, cli-binary]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: |
+            artifacts/sdlicit-vsix/sdlicit.vsix
+            artifacts/sdlicit-cli-linux-x64/sdlicit-cli-linux-x64
+            artifacts/sdlicit-cli-windows-x64.exe/sdlicit-cli-windows-x64.exe

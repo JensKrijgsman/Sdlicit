@@ -15,8 +15,8 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
-from sdlicit.helpers.chunkers import Chunk, get_chunker
 from sdlicit.expansion_stage.tools.knowledge_base import KBChunk, KnowledgeBase
+from sdlicit.helpers.chunkers import Chunk, get_chunker
 from sdlicit.logging import get_logger
 
 if TYPE_CHECKING:
@@ -46,7 +46,7 @@ class StaticContextProvider:
     async def query(
         self,
         text: str,
-        store: "StoreType | None" = None,
+        store: StoreType | None = None,
         mode: str = "hybrid",
         top_k: int = 5,
         probe_first: bool = False,
@@ -85,7 +85,7 @@ class KBRouter:
     def __init__(
         self,
         kb: KnowledgeBase,
-        config: "SdlicitConfig",
+        config: SdlicitConfig,
         default_store: StoreType = "all",
     ) -> None:
         self._kb = kb
@@ -473,9 +473,9 @@ class KBRouter:
     def from_config(
         cls,
         kb: KnowledgeBase,
-        config: "SdlicitConfig",
+        config: SdlicitConfig,
         agent_name: str = "",
-    ) -> "KBRouter":
+    ) -> KBRouter:
         """Create a KBRouter with agent-specific default store from config."""
         default_store: StoreType = "all"
         if agent_name and agent_name in config.kb_agent_stores:

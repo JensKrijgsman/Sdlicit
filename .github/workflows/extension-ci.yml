@@ -1,0 +1,46 @@
+name: Extension CI
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - "extension/**"
+      - ".github/workflows/extension-ci.yml"
+  pull_request:
+    paths:
+      - "extension/**"
+      - ".github/workflows/extension-ci.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: extension
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: extension/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true # has pre-existing warnings (any-typed values); not yet a hard gate
+
+      - name: Compile (type check)
+        run: npm run compile
+
+      - name: Package .vsix
+        run: npx @vscode/vsce package --no-dependencies --out sdlicit.vsix
+
+      - name: Upload .vsix artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdlicit-extension
+          path: extension/sdlicit.vsix

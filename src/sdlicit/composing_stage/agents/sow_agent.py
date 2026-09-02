@@ -208,7 +208,6 @@ class SOWAgent:
 
         The caller (service/router) wraps these as SSE events.
         """
-        from collections.abc import AsyncGenerator  # noqa: F811
 
         clarifications = clarifications or []
 

@@ -18,7 +18,6 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.table import Table
 from rich.text import Text
-
 from shared.files import (
     gherkin_dir,
     latest_sow,
@@ -128,7 +127,7 @@ def _render_directions(summary: str, directions: list[dict[str, Any]]) -> None:
 
 
 def fetch_and_render_directions(
-    client: "SdlicitClient",
+    client: SdlicitClient,
     working_dir: str,
 ) -> list[dict[str, Any]]:
     """Run the suggest-directions backend call and render the result.
@@ -170,7 +169,7 @@ def fetch_and_render_directions(
     return directions
 
 
-def action_suggest_adr_directions(client: "SdlicitClient", working_dir: str) -> None:
+def action_suggest_adr_directions(client: SdlicitClient, working_dir: str) -> None:
     """Standalone menu action — render the ADR-direction table."""
     console.print(
         Panel(
@@ -186,7 +185,7 @@ def action_suggest_adr_directions(client: "SdlicitClient", working_dir: str) -> 
 
 
 def offer_directions_then_prompt_title(
-    client: "SdlicitClient", working_dir: str
+    client: SdlicitClient, working_dir: str
 ) -> str | None:
     """Auto-trigger variant for the create-ADR wizard.
 

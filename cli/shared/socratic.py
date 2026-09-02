@@ -8,12 +8,12 @@ can reuse it.
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
-from rich.rule import Rule
 from rich.text import Text
 
 console = Console()

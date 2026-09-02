@@ -397,7 +397,7 @@ export class SOWPanelProvider {
         if (!this.panel) { return; }
 
         // Compute downstream trace links (SOW → SRS/ADR)
-        let traceLinks: { downstream: string[]; testedBy: string[] } = { downstream: [], testedBy: [] };
+        const traceLinks: { downstream: string[]; testedBy: string[] } = { downstream: [], testedBy: [] };
         if (this.dataService) {
             const artifacts = this.dataService.getArtifacts();
             const sowArtifact = artifacts.find(a => a.type === 'sow');

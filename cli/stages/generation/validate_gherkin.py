@@ -10,7 +10,6 @@ from rich.prompt import Prompt
 from rich.rule import Rule
 from rich.syntax import Syntax
 from rich.table import Table
-
 from shared.files import list_gherkin_files
 
 if TYPE_CHECKING:
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
 console = Console()
 
 
-def action_validate_gherkin(client: "SdlicitClient", working_dir: str) -> None:
+def action_validate_gherkin(client: SdlicitClient, working_dir: str) -> None:
     """Validate Gherkin syntax of existing feature files or pasted text."""
     console.print(Rule("[bold]Validate Gherkin Syntax[/bold]"))
 

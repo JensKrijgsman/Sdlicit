@@ -12,7 +12,7 @@ import json
 from typing import TYPE_CHECKING
 
 from sdlicit.agents.base import AgentResult
-from sdlicit.agents.llm.dspy_modules import UserStoryGeneration, ToMStoryConsult
+from sdlicit.agents.llm.dspy_modules import ToMStoryConsult, UserStoryGeneration
 from sdlicit.agents.llm.gateway import LLMGateway
 from sdlicit.logging import get_logger
 

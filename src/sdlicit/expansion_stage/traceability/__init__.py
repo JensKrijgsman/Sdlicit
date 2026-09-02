@@ -14,7 +14,7 @@ Public API::
     result = service.analyse(workspace, mode="full")  # explicit override
 """
 
-from sdlicit.expansion_stage.traceability.trace_dag import TraceGraph, TraceEdge, TraceNode
-from sdlicit.expansion_stage.traceability.trace_service import TraceService, TraceCoverage
+from sdlicit.expansion_stage.traceability.trace_dag import TraceEdge, TraceGraph, TraceNode
+from sdlicit.expansion_stage.traceability.trace_service import TraceCoverage, TraceService
 
 __all__ = ["TraceService", "TraceCoverage", "TraceGraph", "TraceEdge", "TraceNode"]

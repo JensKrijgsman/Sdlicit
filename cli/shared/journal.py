@@ -30,10 +30,11 @@ import os
 import re
 import time
 import uuid
+from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 # ── Disk layout (mirror of cli/shared/files.py) ───────────────────────────
 
@@ -61,7 +62,7 @@ def _sanitize(name: str, max_len: int = 40) -> str:
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="milliseconds")
+    return datetime.now(UTC).isoformat(timespec="milliseconds")
 
 
 def _atomic_write(path: Path, payload: dict[str, Any]) -> None:

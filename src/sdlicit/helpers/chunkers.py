@@ -13,9 +13,10 @@ section-level provenance.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Protocol
+from typing import Protocol
 
 from sdlicit.helpers.parsers import parse_madr_content
 from sdlicit.logging import get_logger
@@ -445,7 +446,7 @@ class ISOChunker:
             return []
 
         out: list[Chunk] = []
-        for i, (level, clause, heading, start_page) in enumerate(entries):
+        for i, (_level, clause, heading, start_page) in enumerate(entries):
             end_page = entries[i + 1][3] if i + 1 < len(entries) else doc.page_count
             text_parts: list[str] = []
             for p in range(start_page, max(start_page + 1, end_page)):

@@ -71,11 +71,11 @@ class SocraticAgent:
     def __init__(
         self,
         llm: LLMGateway,
-        kb: "KnowledgeBase | None",
-        tom: "ToMAgent | None" = None,
+        kb: KnowledgeBase | None,
+        tom: ToMAgent | None = None,
         judge_mode: JudgeMode = "hybrid",
         max_turns: int = 7,
-        kb_router: "KBRouter | None" = None,
+        kb_router: KBRouter | None = None,
     ) -> None:
         self._llm = llm
         self._kb = kb
@@ -431,7 +431,7 @@ class SocraticAgent:
         self,
         section_content: str,
         conversation_history: str,
-        tom_state: "ToMState",
+        tom_state: ToMState,
     ) -> AgentResult:
         """Ask a Socratic follow-up question about a completed section."""
         chunks = await self._kb.query(section_content[:200]) if self._kb else []

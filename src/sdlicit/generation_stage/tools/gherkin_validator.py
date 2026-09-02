@@ -15,8 +15,8 @@ def validate_gherkin(text: str) -> dict[str, Any]:
     ``scenarios``, and ``issues`` keys.
     """
     try:
-        from gherkin.parser import Parser
         from gherkin.errors import ParserError
+        from gherkin.parser import Parser
     except ImportError:
         # Fallback: basic keyword check when gherkin-official is not installed
         return _fallback_validate(text)

@@ -33,7 +33,7 @@ class CreateSOWResponse(BaseModel):
     sow_markdown: str = Field(
         default="", description="Generated SOW in Markdown format"
     )
-    artifact_meta: "ArtifactMeta | None" = Field(
+    artifact_meta: ArtifactMeta | None = Field(
         default=None,
         description="Canonical filename and path — frontends must use this for saving",
     )
@@ -133,7 +133,7 @@ class StepEventResponse(BaseModel):
 
     suggestion: StepSuggestion | None = None  # primary ADR suggestion
     compliance: str | None = None  # Requirement-Agent notes
-    artifact_meta: "ArtifactMeta | None" = Field(
+    artifact_meta: ArtifactMeta | None = Field(
         default=None,
         description="Populated on 'title' step — canonical filename for this ADR",
     )

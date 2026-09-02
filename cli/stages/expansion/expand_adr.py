@@ -16,7 +16,6 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.rule import Rule
 from rich.table import Table
-
 from shared.files import list_adr_files
 
 if TYPE_CHECKING:
@@ -25,7 +24,7 @@ if TYPE_CHECKING:
 console = Console()
 
 
-def action_expand_adr(client: "SdlicitClient", working_dir: str) -> None:
+def action_expand_adr(client: SdlicitClient, working_dir: str) -> None:
     """Pick an ADR and run it through the expansion pipeline."""
     files = list_adr_files(working_dir)
     if not files:

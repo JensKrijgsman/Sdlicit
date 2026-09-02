@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from sdlicit.agents.transport import ClarificationItem, SocraticProbeOut
 
 
-def to_clarifications(items: "list[ClarificationItem]") -> "list[Clarification]":
+def to_clarifications(items: list[ClarificationItem]) -> list[Clarification]:
     """Convert transport ClarificationItems to domain Clarification objects."""
     from sdlicit.agents.base import Clarification
 
@@ -23,7 +23,7 @@ def to_clarifications(items: "list[ClarificationItem]") -> "list[Clarification]"
     ]
 
 
-def to_probe_out(probe: "SocraticProbe | None") -> "SocraticProbeOut | None":
+def to_probe_out(probe: SocraticProbe | None) -> SocraticProbeOut | None:
     """Convert a domain SocraticProbe to the transport SocraticProbeOut model.
 
     Returns None if probe is None.

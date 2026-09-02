@@ -13,7 +13,6 @@ captures IMPLEMENTS/SUPERSEDES/TESTED_BY as entity relationships.
 
 from __future__ import annotations
 
-import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -60,7 +59,7 @@ class TraceGraph:
     _reverse_adj: dict[str, list[TraceEdge]] = field(default_factory=dict)
 
     @classmethod
-    def from_project(cls, project_dir: Path) -> "TraceGraph":
+    def from_project(cls, project_dir: Path) -> TraceGraph:
         """Scan .sdlicit/artifacts/ and build the graph from frontmatter only."""
         artifacts_dir = project_dir / ".sdlicit" / "artifacts"
         graph = cls()
@@ -80,7 +79,7 @@ class TraceGraph:
         cls,
         project_dir: Path,
         kb: Any | None = None,
-    ) -> "TraceGraph":
+    ) -> TraceGraph:
         """Build the graph from frontmatter AND enrich with LightRAG edges.
 
         Uses two sources:

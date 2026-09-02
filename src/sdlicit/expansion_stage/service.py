@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 async def expand_adr(
     request: ExpandRequest,
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
 ) -> ExpandResponse:
     """Run the full expansion pipeline over a completed ADR."""
     project_dir = Path(request.project_dir)

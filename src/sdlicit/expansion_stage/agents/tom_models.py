@@ -7,11 +7,10 @@ Tier 3 (User / ``user/``)  — aggregated cross-session user profile.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field
-
 
 # ---------------------------------------------------------------------------
 # Tier 1 — Raw session storage  (sessions/chat/)
@@ -22,7 +21,7 @@ class RawInteraction(BaseModel):
     """A single timestamped event in the interaction log."""
 
     timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
     event_type: str = Field(
         desc="step_input | user_skip | user_engage | agent_suggestion | consult_tom | …"
@@ -36,7 +35,7 @@ class RawSession(BaseModel):
 
     session_id: str
     started_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
     ended_at: str | None = None
     stage: str = Field(
@@ -59,7 +58,7 @@ class SessionUserModel(BaseModel):
 
     session_id: str
     analysed_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
     inferred_intents: list[str] = Field(default_factory=list)
     interaction_patterns: list[str] = Field(default_factory=list)
@@ -82,7 +81,7 @@ class UserModel(BaseModel):
     """
 
     updated_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
     preference_clusters: dict[str, list[str]] = Field(
         default_factory=dict,

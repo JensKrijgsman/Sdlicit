@@ -18,9 +18,10 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, Sequence
+from typing import TYPE_CHECKING, Any, Literal
 
 from sdlicit.logging import get_logger
 
@@ -45,13 +46,7 @@ RE_KB = re.compile(r"KB:[^\s,\]]+")
 # ── Stopwords for semantic analysis ──────────────────────────────────────────
 
 _STOPWORDS = frozenset(
-    "a an the is are was were be been being have has had do does did will would "
-    "shall should may might can could of in to for on with at by from as into "
-    "through during before after above below between out off over under again "
-    "further then once here there when where why how all each every both few "
-    "more most other some such no nor not only own same so than too very s t "
-    "just don should've that that'll these those this that am it its and but if "
-    "or because until while about".split()
+    ["a", "an", "the", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did", "will", "would", "shall", "should", "may", "might", "can", "could", "of", "in", "to", "for", "on", "with", "at", "by", "from", "as", "into", "through", "during", "before", "after", "above", "below", "between", "out", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "each", "every", "both", "few", "more", "most", "other", "some", "such", "no", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "just", "don", "should've", "that", "that'll", "these", "those", "this", "that", "am", "it", "its", "and", "but", "if", "or", "because", "until", "while", "about"]
 )
 
 _TOKEN_RE = re.compile(r"[a-z][a-z0-9_-]{2,}")
@@ -216,8 +211,8 @@ class TraceService:
     def __init__(
         self,
         default_mode: TraceCheckMode = "structural",
-        llm: "LLMGateway | None" = None,
-        kb: "KnowledgeBase | None" = None,
+        llm: LLMGateway | None = None,
+        kb: KnowledgeBase | None = None,
         coverage_threshold: float = 0.3,
         n_topics: int = 8,
         llm_judge: bool = False,
@@ -232,10 +227,10 @@ class TraceService:
     @classmethod
     def from_config(
         cls,
-        config: "SdlicitConfig",
-        llm: "LLMGateway | None" = None,
-        kb: "KnowledgeBase | None" = None,
-    ) -> "TraceService":
+        config: SdlicitConfig,
+        llm: LLMGateway | None = None,
+        kb: KnowledgeBase | None = None,
+    ) -> TraceService:
         """Create a TraceService from project configuration."""
         return cls(
             default_mode=config.trace_check_mode,

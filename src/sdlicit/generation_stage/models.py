@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -57,7 +57,7 @@ class GeneratePersonasResponse(BaseModel):
     raw_suggestion: str = Field(
         default="", description="Raw agent output for debugging"
     )
-    artifact_meta: "ArtifactMeta | None" = Field(
+    artifact_meta: ArtifactMeta | None = Field(
         default=None,
         description="Canonical filename and path — frontends must use this for saving",
     )
@@ -82,7 +82,7 @@ class GenerateGherkinResponse(BaseModel):
 
     gherkin: str = Field(default="", description="Gherkin feature file content")
     raw_suggestion: str = Field(default="")
-    artifact_meta: "ArtifactMeta | None" = Field(
+    artifact_meta: ArtifactMeta | None = Field(
         default=None,
         description="Canonical filename and path — frontends must use this for saving",
     )
@@ -116,7 +116,7 @@ class GenerateStoriesResponse(BaseModel):
 
     stories: list[UserStory] = Field(default_factory=list)
     raw_suggestion: str = Field(default="")
-    artifact_meta: "ArtifactMeta | None" = Field(
+    artifact_meta: ArtifactMeta | None = Field(
         default=None,
         description="Canonical filename and path — frontends must use this for saving",
     )
@@ -160,7 +160,7 @@ class GenerateSRSResponse(BaseModel):
     requirements: list[Requirement] = Field(default_factory=list)
     srs_markdown: str = Field(default="")
     raw_suggestion: str = Field(default="")
-    artifact_meta: "ArtifactMeta | None" = Field(
+    artifact_meta: ArtifactMeta | None = Field(
         default=None,
         description="Canonical filename and path — frontends must use this for saving",
     )

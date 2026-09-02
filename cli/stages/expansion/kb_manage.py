@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 console = Console()
 
 
-def action_kb_manage(client: "SdlicitClient", working_dir: str) -> None:
+def action_kb_manage(client: SdlicitClient, working_dir: str) -> None:
     """Knowledge base management: status, delete artifacts, locate sources."""
     console.print(Rule("[bold]Knowledge Base Management[/bold]"))
 
@@ -91,7 +91,7 @@ def action_kb_manage(client: "SdlicitClient", working_dir: str) -> None:
 
 
 def _delete_artifact(
-    client: "SdlicitClient", artifacts: list[dict]
+    client: SdlicitClient, artifacts: list[dict]
 ) -> None:
     """Delete an artifact's chunks from the KB."""
     if not artifacts:
@@ -117,7 +117,7 @@ def _delete_artifact(
         console.print(f"[red]Error:[/red] {exc}")
 
 
-def _locate_chunk(client: "SdlicitClient", working_dir: str) -> None:
+def _locate_chunk(client: SdlicitClient, working_dir: str) -> None:
     """Locate the source file/page of a KB chunk."""
     source_ref = Prompt.ask(
         "Source reference (e.g. knowledge/.sdlicit/knowledge/ieee830.pdf#4-1)"

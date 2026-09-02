@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 console = Console()
 
 
-def _show_kb_sources(client: "SdlicitClient", working_dir: str) -> None:
+def _show_kb_sources(client: SdlicitClient, working_dir: str) -> None:
     """Display ingested files and their status before querying."""
     try:
         scan = client.scan_documents(project_dir=working_dir)
@@ -53,7 +53,7 @@ def _show_kb_sources(client: "SdlicitClient", working_dir: str) -> None:
         )
 
 
-def action_query_kb(client: "SdlicitClient", working_dir: str = "") -> None:
+def action_query_kb(client: SdlicitClient, working_dir: str = "") -> None:
     """Interactive knowledge base query loop with store-aware routing."""
     # Check if RAG is enabled on the server by doing a probe query
     try:

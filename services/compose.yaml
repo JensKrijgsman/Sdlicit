@@ -67,8 +67,10 @@ services:
     ports:
       - "9621:9621"
     volumes:
-      # - ../test/.sdlicit/knowledge/lightrag_workdir:/app/data/rag_storage
-      - ../notebooks/intermediate/nb01/pipeline/.sdlicit/knowledge/lightrag_workdir:/app/data/rag_storage
+      # Points at a project's knowledge-base workdir (created by the backend
+      # under <project_dir>/.sdlicit/knowledge/lightrag_workdir). Override
+      # with SDLICIT_PROJECT_DIR=/path/to/project before `docker compose up`.
+      - ${SDLICIT_PROJECT_DIR:-..}/.sdlicit/knowledge/lightrag_workdir:/app/data/rag_storage
 
     environment:
       # Server

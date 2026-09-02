@@ -20,7 +20,7 @@ import asyncio
 import json
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -173,7 +173,7 @@ class ToMAgent:
 
         async with self._session_lock:
             # Finalise raw session
-            self._raw_session.ended_at = datetime.now(timezone.utc).isoformat()
+            self._raw_session.ended_at = datetime.now(UTC).isoformat()
             self._raw_session.interactions = [
                 RawInteraction(
                     event_type=i.get("event", "unknown"),
@@ -229,7 +229,7 @@ class ToMAgent:
                 session_id=self._raw_session.session_id,
                 stage=self._raw_session.stage,
                 started_at=self._raw_session.started_at,
-                ended_at=datetime.now(timezone.utc).isoformat(),
+                ended_at=datetime.now(UTC).isoformat(),
                 interactions=[
                     RawInteraction(
                         event_type=i.get("event", "unknown"),
@@ -246,7 +246,7 @@ class ToMAgent:
 
             result = {
                 "session_id": self._state.session_id,
-                "compacted_at": datetime.now(timezone.utc).isoformat(),
+                "compacted_at": datetime.now(UTC).isoformat(),
                 "interaction_count": len(snapshot.interactions),
                 "summary": session_model.model_dump(),
             }

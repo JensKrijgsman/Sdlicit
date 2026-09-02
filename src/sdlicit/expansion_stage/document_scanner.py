@@ -12,8 +12,8 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -262,7 +262,7 @@ class IngestionManifest:
             "file_hash": fhash,
             "status": "partial",
             "chunks_total": total_chunks,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         self._save()
 
@@ -271,7 +271,7 @@ class IngestionManifest:
             "file_hash": fhash,
             "status": "complete",
             "chunks_total": total_chunks,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         self._save()
 
@@ -280,7 +280,7 @@ class IngestionManifest:
             "file_hash": fhash,
             "status": "error",
             "chunks_total": 0,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         self._save()
 
@@ -310,7 +310,7 @@ class IngestionManifest:
 
 async def cleanup_stale_documents(
     project_dir: Path,
-    kb: "KnowledgeBase",
+    kb: KnowledgeBase,
 ) -> dict[str, int]:
     """Remove LightRAG chunks for files tracked in the manifest that no
     longer exist on disk.

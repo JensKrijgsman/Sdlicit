@@ -99,11 +99,11 @@ def summarise_adr(content: str) -> str:
     sections = data.get("sections", {})
 
     context_lines = sections.get("Context and Problem Statement", [])
-    context = " ".join(l.strip() for l in context_lines if l.strip())[:200]
+    context = " ".join(ln.strip() for ln in context_lines if ln.strip())[:200]
 
     outcome_lines = sections.get("Decision Outcome", [])
     outcome = " ".join(
-        l.strip() for l in outcome_lines if l.strip() and not l.startswith("#")
+        ln.strip() for ln in outcome_lines if ln.strip() and not ln.startswith("#")
     )[:200]
 
     return f"[{status}] {title}: {context} → {outcome}"

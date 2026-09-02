@@ -22,6 +22,7 @@ Workspace layout (all under ``<working_dir>/.sdlicit/``)::
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 # ── Workspace layout constants ─────────────────────────────────────────────
 ROOT = Path(".sdlicit")
@@ -301,7 +302,7 @@ def write_gherkin(working_dir: str, slug: str, content: str) -> Path:
 
 
 def save_artifact_via_backend(
-    client: "Any",
+    client: Any,
     artifact_type: str,
     data: dict,
     working_dir: str = "",

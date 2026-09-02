@@ -20,8 +20,8 @@ if TYPE_CHECKING:
 async def query_knowledge_base(
     query: str,
     *,
-    kb: "KnowledgeBase | None" = None,
-    kb_router: "KBRouter | None" = None,
+    kb: KnowledgeBase | None = None,
+    kb_router: KBRouter | None = None,
     mode: str = "hybrid",
 ) -> str:
     """Search the knowledge base for relevant context.
@@ -66,6 +66,7 @@ def check_traceability(
         Human-readable summary of traceability status for this artifact.
     """
     from pathlib import Path
+
     from sdlicit.expansion_stage.traceability.trace_dag import TraceGraph
 
     graph = TraceGraph.from_project(Path(project_dir))

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 def menu_entries(
-    client: "SdlicitClient", working_dir: str
+    client: SdlicitClient, working_dir: str
 ) -> list[tuple[str, str, str, object]]:
     """Return (key, label, description, callable) tuples for the main menu."""
     return [

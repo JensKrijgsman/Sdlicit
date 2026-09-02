@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Prompt
 from rich.rule import Rule
-
-from shared.files import latest_sow, write_sow
+from shared.files import latest_sow
 
 if TYPE_CHECKING:
     from api_client import SdlicitClient
@@ -29,7 +28,7 @@ _SECTIONS = [
 ]
 
 
-def action_regenerate_sow_section(client: "SdlicitClient", working_dir: str) -> None:
+def action_regenerate_sow_section(client: SdlicitClient, working_dir: str) -> None:
     """Regenerate a single section of an existing SOW with user feedback."""
     console.print(Rule("[bold]Regenerate SOW Section[/bold]"))
 

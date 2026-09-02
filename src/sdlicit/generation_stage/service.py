@@ -60,7 +60,7 @@ def _format_history(clarifications: list[Clarification]) -> str:
 
 
 async def _input_probe(
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
     agent_name: str,
     what_was_asked: str,
     user_input: str,
@@ -88,7 +88,7 @@ async def _input_probe(
 
 
 async def _output_probe(
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
     agent_name: str,
     what_was_asked: str,
     user_input: str,
@@ -141,7 +141,7 @@ def _parse_personas(raw: str) -> list[Persona]:
 
 async def generate_personas(
     request: GeneratePersonasRequest,
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
 ) -> GeneratePersonasResponse:
     """Generate user personas from project artifacts (Socratic-aware)."""
     clarifications = to_clarifications(request.clarifications)
@@ -192,7 +192,7 @@ async def generate_personas(
 
 async def generate_gherkin(
     request: GenerateGherkinRequest,
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
 ) -> GenerateGherkinResponse:
     """Generate Gherkin scenarios from validated personas (Socratic-aware)."""
     clarifications = to_clarifications(request.clarifications)
@@ -267,7 +267,7 @@ def _parse_stories(raw: str) -> list[UserStory]:
 
 async def generate_stories(
     request: GenerateStoriesRequest,
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
 ) -> GenerateStoriesResponse:
     """Generate user stories (Socratic-aware)."""
     clarifications = to_clarifications(request.clarifications)
@@ -389,7 +389,7 @@ def _latest_sow_content(project_dir: str) -> str:
 
 async def generate_srs(
     request: GenerateSRSRequest,
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
 ) -> GenerateSRSResponse:
     """Generate a structured SRS from the SOW (Socratic-aware)."""
     clarifications = to_clarifications(request.clarifications)
@@ -482,7 +482,7 @@ async def generate_srs(
 
 async def consult_socratic(
     request: ConsultSocraticRequest,
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
 ) -> ConsultSocraticResponse:
     """Free-form Socratic probe — used by the guided flow."""
     socratic = orchestrator.socratic

@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import asyncio
 import re
-from dataclasses import dataclass, field
+from collections.abc import AsyncIterator
+from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, AsyncIterator
+from typing import TYPE_CHECKING, Any
 
 from sdlicit.helpers.token_counter import TokenCounter, make_counting_llm
 from sdlicit.logging import get_logger
@@ -147,7 +148,6 @@ class KnowledgeBase:
                 )
 
                 async def _safe_openrouter_embed(texts: list[str], **kw: Any) -> Any:
-                    import numpy as np
 
                     result = await _base_embed(texts, **kw)
                     if result is None:
@@ -505,7 +505,7 @@ class KnowledgeBase:
             await rag.ainsert(text, file_paths=file_path)
 
     async def insert_chunks(
-        self, chunks: list["Chunk"], *, scope_prefix: str = ""
+        self, chunks: list[Chunk], *, scope_prefix: str = ""
     ) -> int:
         """Insert pre-chunked content. Each :class:`Chunk` becomes one
         LightRAG document, identified by its ``file_path``.
@@ -535,7 +535,7 @@ class KnowledgeBase:
         return count
 
     async def _insert_chunks_scoped(
-        self, rag: Any, chunks: list["Chunk"], scope_prefix: str
+        self, rag: Any, chunks: list[Chunk], scope_prefix: str
     ) -> int:
         """Insert chunks while preventing LightRAG from processing
         unrelated PENDING / FAILED documents.
@@ -545,6 +545,7 @@ class KnowledgeBase:
         3. Restore shelved docs so they remain queued for later bulk ingest
         """
         from dataclasses import asdict
+
         from lightrag.base import DocStatus
 
         # ── 1. Shelve stale docs ──────────────────────────────────────────
@@ -998,7 +999,7 @@ class KnowledgeBase:
         return edges
 
     @classmethod
-    def from_config(cls, config: "SdlicitConfig") -> "KnowledgeBase":
+    def from_config(cls, config: SdlicitConfig) -> KnowledgeBase:
         return cls(
             working_dir=config.kb_path,
             provider=config.provider,

@@ -9,7 +9,6 @@ of compliance feedback to the user's expertise level.
 
 from __future__ import annotations
 
-import json
 from typing import TYPE_CHECKING
 
 from sdlicit.agents.base import AgentResult, KBReference, Suggestion
@@ -72,10 +71,7 @@ class RequirementAgent:
         if compliance is None:
             return AgentResult()
 
-        refs = [
-            KBReference(source=c.source, chunk=c.text, relevance=c.relevance)
-            for c in chunks
-        ]
+        refs = [KBReference(source="kb", chunk=kb_text[:500], relevance=1.0)] if kb_text else []
         suggestions = [
             Suggestion(
                 field="compliance", message=s, severity="medium", references=refs

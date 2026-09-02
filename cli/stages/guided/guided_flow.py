@@ -18,15 +18,15 @@ AI output. After each step the user can Accept / Regenerate / Edit / Skip.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Confirm
 from rich.rule import Rule
 from rich.table import Table
-
 from shared.files import (
     list_adr_files,
     list_gherkin_files,
@@ -35,6 +35,7 @@ from shared.files import (
     load_personas,
     load_stories,
 )
+
 from stages.composing.create_adr import action_create_adr
 from stages.generation.generate_gherkin import action_generate_gherkin
 from stages.generation.generate_personas import action_generate_personas
@@ -61,7 +62,7 @@ class ArtifactStatus:
     gherkin: int
 
     @classmethod
-    def scan(cls, working_dir: str) -> "ArtifactStatus":
+    def scan(cls, working_dir: str) -> ArtifactStatus:
         return cls(
             sow=len(list_sow_files(working_dir)),
             srs=len(list_srs_files(working_dir)),
@@ -107,7 +108,7 @@ class _Step:
     run: Callable[[], None]
 
 
-def _build_steps(client: "SdlicitClient", working_dir: str) -> list[_Step]:
+def _build_steps(client: SdlicitClient, working_dir: str) -> list[_Step]:
     return [
         _Step(
             key="sow",
@@ -154,7 +155,7 @@ def _build_steps(client: "SdlicitClient", working_dir: str) -> list[_Step]:
     ]
 
 
-def _adr_loop(client: "SdlicitClient", working_dir: str) -> None:
+def _adr_loop(client: SdlicitClient, working_dir: str) -> None:
     """Allow the user to create N ADRs in a row."""
     while True:
         action_create_adr(client, working_dir)
@@ -162,7 +163,7 @@ def _adr_loop(client: "SdlicitClient", working_dir: str) -> None:
             return
 
 
-def _run_trace_check(client: "SdlicitClient", step_key: str) -> None:
+def _run_trace_check(client: SdlicitClient, step_key: str) -> None:
     """Run a lightweight traceability check after a stage completes.
 
     Shows a quick coverage summary and any issues detected.
@@ -201,7 +202,7 @@ def _run_trace_check(client: "SdlicitClient", step_key: str) -> None:
 # ── Main entry ────────────────────────────────────────────────────────────
 
 
-def action_guided_flow(client: "SdlicitClient", working_dir: str) -> None:
+def action_guided_flow(client: SdlicitClient, working_dir: str) -> None:
     """Run the guided SDLC artifact flow."""
     console.print(
         Panel(

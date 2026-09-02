@@ -25,8 +25,8 @@ _log = get_logger("kb_access")
 async def retrieve_context(
     query: str,
     *,
-    kb_router: "KBRouter | StaticContextProvider | None" = None,
-    kb: "KnowledgeBase | None" = None,
+    kb_router: KBRouter | StaticContextProvider | None = None,
+    kb: KnowledgeBase | None = None,
     mode: str = "hybrid",
     probe_first: bool = True,
     max_chars: int = 0,
