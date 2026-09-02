@@ -13,17 +13,20 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import BackgroundTasks, FastAPI
-from starlette.routing import Mount
-
 from pydantic import BaseModel
+from starlette.routing import Mount
 
 from sdlicit.bootstrap import create_system
 from sdlicit.logging import get_logger
 from sdlicit.logging.usage import UsageCounter, bind, unbind
+
+if TYPE_CHECKING:
+    from sdlicit.orchestrator import Orchestrator
 
 load_dotenv()
 
@@ -102,7 +105,7 @@ def health() -> dict[str, str]:
 
 async def _run_staleness_check(
     project_path: Path,
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
 ) -> None:
     """Background task: purge LightRAG chunks for deleted files/artifacts."""
     from sdlicit.expansion_stage.document_scanner import cleanup_stale_documents
@@ -305,8 +308,8 @@ async def give_suggestions(req: GiveSuggestionsRequest) -> dict:
 # REST routes — routers use Depends() to get orchestrator from app.state
 # ---------------------------------------------------------------------------
 
-from sdlicit.composing_stage.router import router as composing_router  # noqa: E402
 from sdlicit.composing_stage.router import intake_router  # noqa: E402
+from sdlicit.composing_stage.router import router as composing_router  # noqa: E402
 from sdlicit.expansion_stage.router import router as expansion_router  # noqa: E402
 from sdlicit.generation_stage.router import router as generation_router  # noqa: E402
 from sdlicit.generation_stage.router import socratic_router  # noqa: E402
@@ -410,7 +413,6 @@ async def review_adr_step(
     step_name: str,
     step_value: str,
     partial_fields: str = "{}",
-    prior_adr_contents: str = "[]",
 ) -> dict:
     """Send a single ADR creation step to the agent and get suggestions."""
     import json
@@ -419,7 +421,6 @@ async def review_adr_step(
         step_name,
         step_value,
         json.loads(partial_fields),
-        json.loads(prior_adr_contents),
     )
     return {
         "suggestions": [

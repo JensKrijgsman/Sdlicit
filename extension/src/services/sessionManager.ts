@@ -54,7 +54,7 @@ interface StateOfMind {
     notes: string;
 }
 
-const TOKEN_WARNING_THRESHOLD = 20_000;
+const DEFAULT_TOKEN_WARNING_THRESHOLD = 20_000;
 const MAX_INDEX_ENTRIES = 50;
 const STATE_OF_MIND_UPDATE_INTERVAL = 5; // update every N interactions
 
@@ -72,8 +72,16 @@ export class SessionManager {
     /** Interaction count since last state-of-mind update */
     private interactionsSinceStateUpdate = 0;
 
-    /** Whether the 20K token warning has been shown this session */
+    /** Whether the token warning has been shown this session */
     private tokenWarningShown = false;
+
+    /**
+     * Compaction trigger threshold in tokens. Same concept the CLI already
+     * uses (model_context_window * compact_threshold_pct from /api/v1/config)
+     * so both clients respond to one shared, user configurable budget
+     * instead of the extension using its own hardcoded constant.
+     */
+    private compactionThreshold = DEFAULT_TOKEN_WARNING_THRESHOLD;
 
     /** Count of interactions since last compaction (for incremental compact) */
     private interactionsSinceCompact = 0;
@@ -82,9 +90,9 @@ export class SessionManager {
     private loggingEnabled = true;
 
     constructor(private readonly client: SdlicitClient) {
-        // Listen to token updates for 20K warning
+        // Listen to token updates for the compaction warning
         this.client.onTokenUpdate((usage) => {
-            if (!this.tokenWarningShown && usage.total >= TOKEN_WARNING_THRESHOLD) {
+            if (!this.tokenWarningShown && usage.total >= this.compactionThreshold) {
                 this.tokenWarningShown = true;
                 this.handleTokenThresholdExceeded();
             }
@@ -157,6 +165,17 @@ export class SessionManager {
         } catch (err: any) {
             this.client.log(`Session start failed (using local ID): ${err.message}`);
             this.sessionId = `local_${Date.now().toString(36)}`;
+        }
+
+        try {
+            const config = await this.client.getConfig();
+            if (config.model_context_window && config.compact_threshold_pct) {
+                this.compactionThreshold = Math.round(
+                    config.model_context_window * config.compact_threshold_pct,
+                );
+            }
+        } catch (err: any) {
+            this.client.log(`Could not load compaction threshold, using default: ${err.message}`);
         }
 
         // Add to session index
@@ -286,11 +305,11 @@ export class SessionManager {
         this.recordLog(type, data);
     }
 
-    // --- 20K token threshold -------------------------------------------------
+    // --- Token threshold -------------------------------------------------
 
     private async handleTokenThresholdExceeded(): Promise<void> {
         const choice = await vscode.window.showWarningMessage(
-            'Sdlicit: Session tokens exceeded 20K — ToM quality may degrade. Auto-compacting session…',
+            `Sdlicit: Session tokens exceeded ${this.compactionThreshold.toLocaleString()} — ToM quality may degrade. Auto-compacting session…`,
             'OK',
             'View Details',
         );
@@ -300,7 +319,7 @@ export class SessionManager {
         // Auto-compact in background
         this.compact().then((result) => {
             if (result?.status === 'ok') {
-                this.client.log('Auto-compact completed after 20K token threshold.');
+                this.client.log('Auto-compact completed after token threshold reached.');
             }
         }).catch(() => { /* best effort */ });
     }

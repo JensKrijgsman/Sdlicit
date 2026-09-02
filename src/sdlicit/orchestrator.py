@@ -7,17 +7,18 @@ this directly (no HTTP needed).  The FastAPI server wraps it.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any
 
 from sdlicit.agents.base import AgentResult, Clarification
-from sdlicit.agents.llm.gateway import LLMGateway, create_gateway
+from sdlicit.agents.llm.gateway import create_gateway
 from sdlicit.composing_stage.agents.adr_agent import ADRAgent
 from sdlicit.composing_stage.agents.requirement_agent import RequirementAgent
 from sdlicit.composing_stage.agents.sow_agent import SOWAgent
 from sdlicit.config import SdlicitConfig
 from sdlicit.expansion_stage.agents.socratic_agent import SocraticAgent
 from sdlicit.expansion_stage.agents.tom_agent import ToMAgent
+from sdlicit.expansion_stage.tools.kb_router import KBRouter, StaticContextProvider
+from sdlicit.expansion_stage.tools.knowledge_base import KnowledgeBase
 from sdlicit.generation_stage.agents.bdd_facilitator_agent import BDDAgent
 from sdlicit.generation_stage.agents.user_story_agent import UserStoryAgent
 from sdlicit.helpers.kb_access import retrieve_context
@@ -26,8 +27,6 @@ from sdlicit.helpers.project_files import (
     SESSIONS_SDLICIT_DIR,
     SESSIONS_USER_DIR,
 )
-from sdlicit.expansion_stage.tools.knowledge_base import KnowledgeBase
-from sdlicit.expansion_stage.tools.kb_router import KBRouter, StaticContextProvider
 from sdlicit.logging import get_logger
 
 _log = get_logger("agent")
@@ -134,6 +133,8 @@ class Orchestrator:
             tom=self.tom,
             socratic=self.socratic,
             kb_router=_agent_router("adr"),
+            model_context_window=config.model_context_window,
+            compact_threshold_pct=config.compact_threshold_pct,
         )
         _log.info("ADRAgent initialised")
         self.requirement = RequirementAgent(
@@ -230,7 +231,6 @@ class Orchestrator:
         step_name: str,
         step_value: str | list[str],
         partial_adr: dict[str, Any],
-        prior_adrs: list[str],
         clarifications: list[Clarification] | None = None,
     ) -> AgentResult:
         """Stage 1: Review a single ADR field."""
@@ -253,7 +253,6 @@ class Orchestrator:
             step_name,
             step_value,
             partial_adr,
-            prior_adrs,
             clarifications=clarifications,
         )
         _log.info("[ADRAgent] review_step → %d suggestions", len(result.suggestions))

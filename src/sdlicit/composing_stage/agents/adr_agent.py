@@ -31,6 +31,12 @@ from sdlicit.agents.llm.dspy_modules import (
     ToMADRStepConsult,
 )
 from sdlicit.agents.llm.gateway import LLMGateway
+from sdlicit.helpers.context_budget import (
+    assemble_context,
+    context_budget_tokens,
+    parse_adr_records,
+    rank_prior_adrs,
+)
 from sdlicit.helpers.kb_access import retrieve_context
 from sdlicit.logging import get_logger
 
@@ -53,19 +59,21 @@ class ADRAgent:
         tom: ToMAgent | None = None,
         socratic: SocraticAgent | None = None,
         kb_router: KBRouter | None = None,
+        model_context_window: int = 8192,
+        compact_threshold_pct: float = 0.4,
     ) -> None:
         self._llm = llm
         self._kb = kb
         self._tom = tom
         self._socratic = socratic
         self._kb_router = kb_router
+        self._context_budget = context_budget_tokens(model_context_window, compact_threshold_pct)
 
     async def review_step(
         self,
         step_name: str,
         step_value: str | list[str],
         partial_adr: dict,
-        prior_adrs: list[str],
         clarifications: list[Clarification] | None = None,
     ) -> AgentResult:
         """Review a single ADR field and return suggestions.
@@ -228,10 +236,15 @@ class ADRAgent:
             adr_content[:200], kb_router=self._kb_router, kb=self._kb
         )
 
+        records = rank_prior_adrs(adr_content, parse_adr_records(prior_adrs))
+        prior_context, dropped = assemble_context(records, self._context_budget)
+        if dropped:
+            _log.info("[ADRAgent] full_review: %d prior ADR(s) dropped past budget", dropped)
+
         result = await self._llm.predict(
             ADRFullReview,
             adr_content=adr_content,
-            prior_artifacts=json.dumps(prior_adrs[:5]),
+            prior_artifacts=prior_context,
         )
 
         review = getattr(result, "review", None)
@@ -291,13 +304,19 @@ class ADRAgent:
             except Exception as exc:
                 _log.debug("[ADRAgent] could not load user model: %s", exc)
 
-        # Concatenate prior ADRs with a soft cap to keep prompts bounded.
-        prior_concat = "\n\n---\n\n".join(prior_adrs[:10]) if prior_adrs else ""
+        # Rank prior ADRs by relatedness to the brief and bound them to a
+        # token budget instead of concatenating a fixed, oldest-first slice.
+        records = rank_prior_adrs(brief, parse_adr_records(prior_adrs))
+        prior_context, dropped = assemble_context(records, self._context_budget)
+        if dropped:
+            _log.info(
+                "[ADRAgent] suggest_directions: %d prior ADR(s) dropped past budget", dropped
+            )
 
         result = await self._llm.predict(
             SuggestADRDirections,
             brief=brief,
-            prior_adrs=prior_concat,
+            prior_adrs=prior_context,
             downstream_artifacts=downstream_artifacts,
             uncovered_requirements=uncovered_requirements,
             kb_chunks=kb_text,

@@ -1,0 +1,11 @@
+# Sdlicit configuration for the Sdlicit project itself.
+#
+# This project directory exists so Sdlicit's own architectural decisions
+# can be recorded with the same tool and format it produces for its users.
+# See .sdlicit/artifacts/adr/ for the record.
+
+provider: openrouter
+model: openai/gpt-5.4-nano
+enable_rag: false
+enable_tom: false
+enable_socratic: false

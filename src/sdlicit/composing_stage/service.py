@@ -11,9 +11,9 @@ from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from sdlicit.helpers.project_files import read_all_adrs, list_adr_files
 from sdlicit.helpers.artifact_naming import resolve_adr_meta, resolve_sow_meta
 from sdlicit.helpers.kb_access import retrieve_context
+from sdlicit.helpers.project_files import list_adr_files, read_all_adrs
 from sdlicit.helpers.socratic_envelope import to_clarifications
 from sdlicit.logging import get_logger
 
@@ -41,8 +41,7 @@ _log = get_logger("route")
 
 # Stop-words excluded from title similarity matching
 _STOP_WORDS = frozenset(
-    "a an the and or of for in on to with by is are was were be been "
-    "use using choose select decision record".split()
+    ["a", "an", "the", "and", "or", "of", "for", "in", "on", "to", "with", "by", "is", "are", "was", "were", "be", "been", "use", "using", "choose", "select", "decision", "record"]
 )
 
 
@@ -101,20 +100,19 @@ def _detect_supersession(new_title: str, project_dir: Path) -> SupersedesHint | 
 
 async def handle_step_event(
     request: StepEventRequest,
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
 ) -> StepEventResponse:
-    """Forward a single step to the Orchestrator and collect suggestions."""
-    prior_adrs: list[str] = []
-    if request.project_dir:
-        prior_adrs = read_all_adrs(Path(request.project_dir))
+    """Forward a single step to the Orchestrator and collect suggestions.
 
+    Does not read prior ADRs from disk: a single field review never used
+    them (see ADRAgent.review_step), so the read was pure waste.
+    """
     clarifications = to_clarifications(request.clarifications)
 
     result = await orchestrator.review_step(
         step_name=request.step_name,
         step_value=request.step_value,
         partial_adr=request.partial_fields,
-        prior_adrs=prior_adrs,
         clarifications=clarifications,
     )
 
@@ -171,7 +169,7 @@ async def handle_step_event(
 
 async def analyse_input(
     request: AnalyseRequest,
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
 ) -> AnalyseResponse:
     """Full-sweep analysis of user input / completed ADR."""
     prior_adrs: list[str] = []
@@ -190,7 +188,7 @@ async def analyse_input(
 
 async def suggest_adr_directions(
     request: SuggestDirectionsRequest,
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
 ) -> SuggestDirectionsResponse:
     """Return a ranked list of ADR topics the user should consider writing."""
     prior_adrs: list[str] = []
@@ -227,7 +225,7 @@ async def suggest_adr_directions(
 
 async def create_sow(
     request: CreateSOWRequest,
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
 ) -> CreateSOWResponse:
     """Run the SOW agent on a raw brief."""
     clarifications = to_clarifications(request.clarifications)
@@ -265,7 +263,7 @@ def _sse(data: dict) -> str:
 
 async def create_sow_stream(
     request: CreateSOWRequest,
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
 ) -> AsyncGenerator[str, None]:
     """Yield SSE events for incremental SOW generation."""
     clarifications = to_clarifications(request.clarifications)
@@ -277,7 +275,7 @@ async def create_sow_stream(
 
 async def regenerate_section(
     request: RegenerateSectionRequest,
-    orchestrator: "Orchestrator",
+    orchestrator: Orchestrator,
 ) -> RegenerateSectionResponse:
     """Regenerate a single SOW section with user feedback folded in."""
     from sdlicit.agents.llm.dspy_modules import GenerateSOWSection

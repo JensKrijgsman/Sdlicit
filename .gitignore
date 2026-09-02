@@ -24,12 +24,15 @@ node_modules/
 # Local project workspaces (created at runtime under a working dir's .sdlicit/)
 .sdlicit/
 
-# ...except the bundled example project, which is intentionally checked in.
-# Re-excluded paths must come after the negation (gitignore = last match
-# wins), since `!.../**` would otherwise also un-ignore its lightrag_workdir/.
+# ...except the bundled example project and the project's own self
+# documentation (its own ADRs, written in its own format). Re-excluded
+# paths must come after the negation (gitignore = last match wins),
+# since `!.../**` would otherwise also un-ignore lightrag_workdir/.
 !examples/demo/.sdlicit/
 !examples/demo/.sdlicit/**
 examples/demo/.sdlicit/knowledge/lightrag_workdir/
+!/.sdlicit/
+!/.sdlicit/**
 
 # env file
 .env
