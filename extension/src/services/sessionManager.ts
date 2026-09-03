@@ -162,8 +162,9 @@ export class SessionManager {
             const result = await this.client.sessionStart(stage);
             this.sessionId = result.session_id;
             this.client.log(`Session started: ${this.sessionId}`);
-        } catch (err: any) {
-            this.client.log(`Session start failed (using local ID): ${err.message}`);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            this.client.log(`Session start failed (using local ID): ${message}`);
             this.sessionId = `local_${Date.now().toString(36)}`;
         }
 
@@ -174,8 +175,9 @@ export class SessionManager {
                     config.model_context_window * config.compact_threshold_pct,
                 );
             }
-        } catch (err: any) {
-            this.client.log(`Could not load compaction threshold, using default: ${err.message}`);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            this.client.log(`Could not load compaction threshold, using default: ${message}`);
         }
 
         // Add to session index
@@ -196,8 +198,9 @@ export class SessionManager {
             const result = await this.client.sessionEnd();
             this.persistBackendResult(result);
             this.client.log(`Session ended: ${this.sessionId}`);
-        } catch (err: any) {
-            this.client.log(`Session end failed: ${err.message}`);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            this.client.log(`Session end failed: ${message}`);
             // Still persist local data
             this.persistLocalChat();
         }
@@ -231,8 +234,9 @@ export class SessionManager {
                 this.interactionsSinceCompact = 0;
             }
             return result;
-        } catch (err: any) {
-            this.client.log(`Session compact failed: ${err.message}`);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            this.client.log(`Session compact failed: ${message}`);
             return null;
         }
     }
@@ -248,8 +252,9 @@ export class SessionManager {
                     JSON.stringify(result.user_model, null, 2),
                 );
             }
-        } catch (err: any) {
-            this.client.log(`Save preference failed: ${err.message}`);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            this.client.log(`Save preference failed: ${message}`);
         }
     }
 

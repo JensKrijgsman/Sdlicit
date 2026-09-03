@@ -43,6 +43,8 @@ Search "Sdlicit" in the Command Palette:
 | `sdlicit.showCallNotifications` | — | Show a notification per backend call |
 | `sdlicit.models.default` | — | Default model override shown in the UI |
 
+There are also `sdlicit.backend.*` settings (enableRag, enableTom, enableSocratic, socraticJudgeMode, tomFocus, and others) and per stage `sdlicit.models.*` overrides. These map to the backend ablation surface described in [architecture.md](architecture.md) rather than being extension only settings, so they are documented there.
+
 ## Known limitations
 
 The Dashboard's Questions tab only reflects Socratic probes from panels currently open, not a persisted history across sessions — each panel tracks its own pending probe in memory and there is no durable cross-session log for this yet.

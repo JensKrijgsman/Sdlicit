@@ -53,6 +53,8 @@ Open the Command Palette and search "Sdlicit":
 | `sdlicit.showCallNotifications` | — | Show a notification per backend call. |
 | `sdlicit.models.default` | — | Default model override shown in the UI. |
 
+There are also `sdlicit.backend.*` settings (enableRag, enableTom, enableSocratic, socraticJudgeMode, tomFocus, and others) and per stage `sdlicit.models.*` overrides. These map to the backend ablation surface, documented in [docs/architecture.md](../docs/architecture.md) rather than here.
+
 ## Known limitations
 
 There is no free-form, standing chat surface on the CLI side of this project (the CLI is a structured wizard) — the chat panel and its automatic Socratic follow-up suggestions are extension-only for now. The Dashboard's Questions tab only reflects Socratic probes from panels currently open, not a persisted history across sessions.

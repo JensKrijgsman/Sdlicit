@@ -91,19 +91,34 @@ export class WipManager {
         return 'resume';
     }
 
-    private hasContent(type: WipType, raw: any): boolean {
+    /**
+     * Loose shape of a persisted WIP draft — this is untrusted disk JSON, one
+     * writer per WipType, so every field is optional and only the ones each
+     * case reads below are declared.
+     */
+    private hasContent(
+        type: WipType,
+        raw: {
+            sections?: { content?: string }[];
+            textSections?: { content?: string }[];
+            requirements?: unknown[];
+            fields?: { content?: string }[];
+            scenarios?: unknown[];
+            stories?: unknown[];
+        },
+    ): boolean {
         switch (type) {
             case 'sow':
-                return raw.sections?.some((s: any) => s.content?.trim());
+                return !!raw.sections?.some((s) => s.content?.trim());
             case 'srs':
-                return (raw.textSections?.some((s: any) => s.content?.trim()))
-                    || (raw.requirements?.length > 0);
+                return !!(raw.textSections?.some((s) => s.content?.trim()))
+                    || (raw.requirements?.length ?? 0) > 0;
             case 'adr':
-                return raw.fields?.some((f: any) => f.content?.trim());
+                return !!raw.fields?.some((f) => f.content?.trim());
             case 'bdd':
-                return raw.scenarios?.length > 0;
+                return (raw.scenarios?.length ?? 0) > 0;
             case 'stories':
-                return raw.stories?.length > 0;
+                return (raw.stories?.length ?? 0) > 0;
             default:
                 return false;
         }

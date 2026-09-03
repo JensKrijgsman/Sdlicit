@@ -253,18 +253,19 @@ export class KBSyncService {
             this._onStatusChange.fire(updated);
             this._onFilesChange.fire();
             vscode.window.showInformationMessage(`Sdlicit: "${fileName}" ingested into KB ✓`);
-        } catch (err: any) {
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
             const errorEntry: KBFileEntry = {
                 fileName,
                 filePath,
                 relativePath: path.relative(this.projectDir!, filePath),
                 status: 'error',
-                error: err.message,
+                error: message,
             };
             this.statusMap.set(fileName, errorEntry);
             this._onStatusChange.fire(errorEntry);
             this._onFilesChange.fire();
-            vscode.window.showErrorMessage(`Sdlicit: Ingestion failed for "${fileName}" — ${err.message}`);
+            vscode.window.showErrorMessage(`Sdlicit: Ingestion failed for "${fileName}" — ${message}`);
         }
     }
 
@@ -279,8 +280,9 @@ export class KBSyncService {
     async deleteFromKB(fileName: string, artifactType: string): Promise<void> {
         try {
             await this.client.deleteFromKB(artifactType, fileName);
-        } catch (err: any) {
-            console.warn(`Sdlicit: KB deletion failed for ${fileName}:`, err.message);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            console.warn(`Sdlicit: KB deletion failed for ${fileName}:`, message);
         }
     }
 
