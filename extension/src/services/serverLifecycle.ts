@@ -95,9 +95,10 @@ export class ServerLifecycle {
             await this.client.init(workspaceRoot);
             this.cancelReconnect();
             this.setState('connected');
-        } catch (err: any) {
+        } catch (err) {
             this.setState('error');
-            vscode.window.showErrorMessage(`Sdlicit: Init failed — ${err.message}`);
+            const message = err instanceof Error ? err.message : String(err);
+            vscode.window.showErrorMessage(`Sdlicit: Init failed — ${message}`);
         }
         // Always keep health polling active regardless of outcome
         this.startHealthPolling();

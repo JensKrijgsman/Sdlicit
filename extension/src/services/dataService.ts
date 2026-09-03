@@ -440,8 +440,9 @@ export class DataService {
         const indexPath = path.join(this.workspaceRoot, INDEX_FILE);
         if (fs.existsSync(indexPath)) {
             try {
-                const index = JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
-                index.recent = (index.recent ?? []).filter((s: any) => s.session_id !== sessionId);
+                const index: { recent: SessionSummary[]; last_session_id: string | null; active_session_id: string | null } =
+                    JSON.parse(fs.readFileSync(indexPath, 'utf-8'));
+                index.recent = (index.recent ?? []).filter((s) => s.session_id !== sessionId);
                 if (index.last_session_id === sessionId) { index.last_session_id = null; }
                 if (index.active_session_id === sessionId) { index.active_session_id = null; }
                 fs.writeFileSync(indexPath, JSON.stringify(index, null, 2));
@@ -682,8 +683,9 @@ export class DataService {
         try {
             fs.mkdirSync(path.dirname(filePath), { recursive: true });
             fs.writeFileSync(filePath, JSON.stringify(reviews, null, 2), 'utf-8');
-        } catch (err: any) {
-            this.client.log(`Could not persist BDD review for ${scenarioId}: ${err.message}`);
+        } catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            this.client.log(`Could not persist BDD review for ${scenarioId}: ${message}`);
         }
     }
 
