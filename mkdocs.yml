@@ -29,6 +29,7 @@ nav:
   - Backend: backend.md
   - CLI: cli.md
   - Extension: extension.md
+  - Replay and traceability scoring: replay-scoring.md
   - Architecture decisions:
       - adrs/index.md
       - "ADR-0001 — Bound and rank prior artifact context": adrs/ADR-0001-bound-and-rank-prior-artifact-context.md
