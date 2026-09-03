@@ -246,6 +246,11 @@ def get_config() -> dict[str, object]:
         "compact_threshold_pct": cfg.compact_threshold_pct,
         "tom_focus": cfg.tom_focus,
         "log_prompts": cfg.log_prompts,
+        "trace_check_mode": cfg.trace_check_mode,
+        "traceability_graph_source": cfg.traceability_graph_source,
+        "agentic": cfg.agentic,
+        "agentic_max_iters": cfg.agentic_max_iters,
+        "context_override_active": bool(cfg.context_override),
     }
 
 

@@ -41,6 +41,8 @@ from sdlicit.helpers.kb_access import retrieve_context
 from sdlicit.logging import get_logger
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from sdlicit.expansion_stage.agents.socratic_agent import SocraticAgent
     from sdlicit.expansion_stage.agents.tom_agent import ToMAgent
     from sdlicit.expansion_stage.tools.kb_router import KBRouter
@@ -61,6 +63,9 @@ class ADRAgent:
         kb_router: KBRouter | None = None,
         model_context_window: int = 8192,
         compact_threshold_pct: float = 0.4,
+        agentic: bool = False,
+        agentic_max_iters: int = 5,
+        project_dir: Path | None = None,
     ) -> None:
         self._llm = llm
         self._kb = kb
@@ -68,6 +73,9 @@ class ADRAgent:
         self._socratic = socratic
         self._kb_router = kb_router
         self._context_budget = context_budget_tokens(model_context_window, compact_threshold_pct)
+        self._agentic = agentic
+        self._agentic_max_iters = agentic_max_iters
+        self._project_dir = project_dir
 
     async def review_step(
         self,
@@ -231,27 +239,37 @@ class ADRAgent:
         adr_content: str,
         prior_adrs: list[str],
     ) -> AgentResult:
-        """Full coherence/completeness review of a completed ADR."""
-        kb_text = await retrieve_context(
-            adr_content[:200], kb_router=self._kb_router, kb=self._kb
-        )
+        """Full coherence/completeness review of a completed ADR.
 
+        When ``agentic`` is enabled, the KB and traceability lookups are not
+        fixed ahead of time — the LLM decides whether and how to call them
+        via a ReAct loop (see ``_full_review_agentic``), matching the
+        deterministic-pipeline-vs-tool-calling-agent axis from the thesis
+        ablation surface (Table 7).
+        """
         records = rank_prior_adrs(adr_content, parse_adr_records(prior_adrs))
         prior_context, dropped = assemble_context(records, self._context_budget)
         if dropped:
             _log.info("[ADRAgent] full_review: %d prior ADR(s) dropped past budget", dropped)
 
-        result = await self._llm.predict(
-            ADRFullReview,
-            adr_content=adr_content,
-            prior_artifacts=prior_context,
-        )
+        if self._agentic:
+            result, refs = await self._full_review_agentic(adr_content, prior_context)
+        else:
+            kb_text = await retrieve_context(
+                adr_content[:200], kb_router=self._kb_router, kb=self._kb
+            )
+            result = await self._llm.predict(
+                ADRFullReview,
+                adr_content=adr_content,
+                prior_artifacts=prior_context,
+            )
+            refs = (
+                [KBReference(source="kb", chunk=kb_text[:500], relevance=1.0)]
+                if kb_text
+                else []
+            )
 
         review = getattr(result, "review", None)
-        refs: list[KBReference] = []
-        if kb_text:
-            refs = [KBReference(source="kb", chunk=kb_text[:500], relevance=1.0)]
-
         if review is None:
             return AgentResult()
 
@@ -269,6 +287,45 @@ class ADRAgent:
             suggestions=suggestions,
             raw_text=getattr(review, "summary", str(review)),
         )
+
+    async def _full_review_agentic(
+        self, adr_content: str, prior_context: str
+    ) -> tuple[object, list[KBReference]]:
+        """ReAct variant of ``full_review``: the LLM chooses its own tool calls.
+
+        Wraps ``query_knowledge_base``/``check_traceability`` from
+        ``rag_tools`` with this agent's KB router and project dir already
+        bound, so the LLM only ever supplies the arguments it actually
+        controls (the query text, the artifact id).
+        """
+        from sdlicit.expansion_stage.tools.rag_tools import (
+            check_traceability,
+            query_knowledge_base,
+        )
+
+        kb_calls: list[str] = []
+
+        async def _query_kb(query: str, mode: str = "hybrid") -> str:
+            kb_calls.append(query)
+            return await query_knowledge_base(
+                query, kb=self._kb, kb_router=self._kb_router, mode=mode
+            )
+
+        def _check_trace(artifact_id: str, artifact_type: str = "adr") -> str:
+            if self._project_dir is None:
+                return "No project directory available for traceability lookup."
+            return check_traceability(artifact_id, artifact_type, str(self._project_dir))
+
+        result = await self._llm.predict_react(
+            ADRFullReview,
+            tools=[_query_kb, _check_trace],
+            max_iters=self._agentic_max_iters,
+            adr_content=adr_content,
+            prior_artifacts=prior_context,
+        )
+
+        refs = [KBReference(source="kb", chunk=q, relevance=1.0) for q in kb_calls[:3]]
+        return result, refs
 
     async def suggest_directions(
         self,

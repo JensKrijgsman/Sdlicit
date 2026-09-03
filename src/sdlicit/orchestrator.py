@@ -135,6 +135,9 @@ class Orchestrator:
             kb_router=_agent_router("adr"),
             model_context_window=config.model_context_window,
             compact_threshold_pct=config.compact_threshold_pct,
+            agentic=config.agentic,
+            agentic_max_iters=config.agentic_max_iters,
+            project_dir=config.project_dir,
         )
         _log.info("ADRAgent initialised")
         self.requirement = RequirementAgent(
