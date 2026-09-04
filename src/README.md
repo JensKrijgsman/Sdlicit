@@ -10,7 +10,7 @@ src/sdlicit/
 ├── main.py              REST API + MCP server entry point
 ├── orchestrator.py      Stage routing and agent construction order
 ├── bootstrap.py         Project init from .sdlicit/config.yaml
-├── composing_stage/     ADR creation (MADR, step-by-step)
+├── composing_stage/     ADR creation (MADR, step by step)
 ├── expansion_stage/     KB ingestion, ToM, Socratic agent, traceability
 ├── generation_stage/    SRS, personas, user stories, Gherkin
 ├── agents/              LLM gateway, DSPy signatures and programs
@@ -31,9 +31,10 @@ Clients: `cli/cli_client.py` and `extension/` (both speak REST).
 
 ## Design notes (thesis)
 
-- **Traceability** — post-hoc grading reads artefacts from disk; agents never
-  score their own output.
+- **Traceability** — grading happens after the fact, reading artefacts from
+  disk; agents never score their own output.
 - **Structured outputs** — DSPy + Pydantic via `BAMLAdapter`; `dspy.Refine`
-  for hard/soft validation retries.
-- **Knowledge grounding** — per-agent `KBRouter` over LightRAG (hybrid mode).
+  for hard and soft validation retries.
+- **Knowledge grounding** — `KBRouter` over LightRAG (hybrid mode), routed
+  per agent.
 - **MCP** — traceability and stage tools exposed for external agents.

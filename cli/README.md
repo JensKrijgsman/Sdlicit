@@ -1,6 +1,6 @@
 # `cli/` — Terminal client
 
-Rich-menu CLI that drives the Sdlicit backend over HTTP. It is a pure
+A rich menu CLI that drives the Sdlicit backend over HTTP. It is a pure
 presentation layer: no direct imports from `src/sdlicit/`.
 
 ## Layout
@@ -15,7 +15,7 @@ cli/
     ├── composing/    ADRs
     ├── expansion/    KB ingest, query, traceability
     ├── generation/   SRS, personas, stories, Gherkin
-    └── guided/       End-to-end guided flow
+    └── guided/       End to end guided flow
 ```
 
 ## Usage

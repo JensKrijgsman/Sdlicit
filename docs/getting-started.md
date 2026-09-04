@@ -57,7 +57,7 @@ npm install
 npm run compile
 ```
 
-Open the `extension/` folder in VS Code and press `F5` to launch an Extension Development Host, or package it with `vsce package` and install the resulting `.vsix`. The extension auto-starts the backend for you (`sdlicit.autoStartServer` setting) if one isn't already running.
+Open the `extension/` folder in VS Code and press `F5` to launch an Extension Development Host, or package it with `vsce package` and install the resulting `.vsix`. The extension starts the backend for you automatically (`sdlicit.autoStartServer` setting) if one isn't already running.
 
 See the [Extension guide](extension.md) for the sidebar views and commands.
 

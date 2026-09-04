@@ -9,7 +9,7 @@ services/
 ├── compose.yaml    Orchestrates all services
 ├── lightrag/       LightRAG HTTP service (graph + vector retrieval)
 ├── ollama/         Local LLM inference (models/ not shipped)
-└── db/             PostgreSQL init scripts (demo time-tracking schema)
+└── db/             PostgreSQL init scripts (demo time tracking schema)
 ```
 
 ## Usage

@@ -1,6 +1,6 @@
 # `examples/demo/` — Example workspace
 
-Pre-populated Sdlicit project: a time-allocation pilot for subsidised
+An already populated Sdlicit project: a time allocation pilot for subsidised
 research projects. Point the CLI or extension at this directory to explore
 a finished run without generating anything yourself.
 
