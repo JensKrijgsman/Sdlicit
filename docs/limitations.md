@@ -52,6 +52,17 @@ external sources rather than a single clean document set.
 
 ## From the implementation
 
+**The agentic ablation knob only reaches one agent.** `config.agentic`
+switches between the deterministic pipeline and a ReAct tool calling
+loop (`LLMGateway.predict_react`), but that path had zero call sites
+anywhere until this pass wired it into `ADRAgent.full_review`. Every
+other agent, including `suggest_directions` and the generation stage
+agents (SRS, personas, stories, Gherkin), still always calls the
+deterministic `predict()` regardless of this setting. Extending it to
+those call sites is real, mechanical follow on work, not attempted
+here since it was deliberately scoped to proving the wiring works on
+one agent first.
+
 **LLM provider abstraction is minimal.** The gateway supports the
 providers already wired in (OpenRouter, Ollama, and whatever DSPy's
 adapter layer covers out of the box). Adding a new provider means editing
