@@ -62,7 +62,9 @@ Sdlicit's stages map to the files under `src/sdlicit/`:
 
 ## Prior artifact context
 
-Generation calls that need prior ADRs as context (`ADRAgent.suggest_directions`, `ADRAgent.full_review`) go through `helpers/context_budget.py`: candidates are ranked by relatedness to the topic (shared requirement ids first, word overlap second, recency last), kept in full while a token budget allows, summarised past that, and dropped past the budget with the drop count surfaced rather than silently truncated. The budget reuses `config.model_context_window` and `config.compact_threshold_pct`, the same fields `ToMAgent.compact_session()` uses for its own session log compaction. See [ADR-0001](adrs/ADR-0001-bound-and-rank-prior-artifact-context.md) for the full reasoning.
+Generation calls that need prior ADRs as context (`ADRAgent.suggest_directions`, `ADRAgent.full_review`) go through `helpers/context_budget.py`: candidates are ranked by relatedness to the topic (shared requirement ids first, word overlap second, recency last), kept in full while a token budget allows, summarised past that, and dropped past the budget with the drop count surfaced rather than silently truncated. The budget reuses `config.model_context_window` and `config.compact_threshold_pct`, the same fields `ToMAgent.compact_session()` uses for its own session log compaction.
+
+This replaced an earlier implementation that read every ADR on disk on every call and passed a fixed slice, sorted oldest first by filename, as raw markdown straight into the prompt. Once a project grew past the slice size, the newest and most relevant ADRs were the ones silently dropped, and `ADRAgent.review_step` did the same disk read on every field review despite never using the result. The fix reused two pieces that already existed but were not wired in: `summarise_adr()`, written for exactly this purpose but never called from the generation pipeline, and the traceability layer's `implements` frontmatter, which already tracks which artifacts relate to which requirements.
 
 ## Ablation surface
 
