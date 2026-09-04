@@ -1,17 +1,50 @@
 # ---------------------------------------------------------------------------
-# Sdlicit — Development Services
+# Sdlicit — Full Stack
 #
 # Usage:
-#   docker compose -f services/compose.yaml up -d
+#   SDLICIT_PROJECT_DIR=/path/to/project docker compose -f services/compose.yaml up -d --build
 #   docker compose -f services/compose.yaml down
 #
 # Services:
-#   sdlicit-db     — Postgres 16 + pgvector + AGE (port 5432)
-#   ollama         — Ollama model server (port 11434, GPU)
-#   lightrag       — LightRAG API server (port 9621)
+#   sdlicit-backend — the Sdlicit API server (port 8000)
+#   sdlicit-db      — Postgres 16 with pgvector and AGE (port 5432)
+#   ollama          — Ollama model server (port 11434, GPU)
+#   lightrag        — LightRAG API server and WebUI (port 9621)
+#
+# See ../docs/deployment.md for what each service is actually for. In short:
+# the backend embeds the LightRAG Python library directly and writes its
+# knowledge base to <project_dir>/.sdlicit/knowledge/lightrag_workdir on
+# disk, it does not call the lightrag service over the network. lightrag
+# here is a separate standalone server pointed at that same directory,
+# useful only for browsing the knowledge graph through its own WebUI. Ollama
+# is only needed when a project's config.yaml sets provider: ollama.
+# sdlicit-db is provisioned (pgvector and AGE installed) but nothing in the
+# current codebase connects to it yet, LightRAG runs in JSON file storage
+# mode below. It is not started by default, see the profile note on it.
 # ---------------------------------------------------------------------------
 services:
+  sdlicit-backend:
+    container_name: sdlicit_backend
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    # Matches the mounted project directory's owner on the host. The image
+    # defaults to 1000:1000, override with UID/GID env vars (export UID GID
+    # before `docker compose up`, or `UID=$(id -u) GID=$(id -g) docker
+    # compose up`) if your user is not 1000 on the host.
+    user: "${UID:-1000}:${GID:-1000}"
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: ../.env
+        required: false
+    volumes:
+      - ${SDLICIT_PROJECT_DIR:-../examples/demo}:/data/project
+    networks:
+      - sdlicit_net
+
   sdlicit-db:
+    profiles: ["postgres"]
     container_name: sdlicit_postgres
     build:
       context: ./db

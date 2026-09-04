@@ -27,6 +27,7 @@ nav:
   - Getting started: getting-started.md
   - Architecture: architecture.md
   - Backend: backend.md
+  - Deployment: deployment.md
   - CLI: cli.md
   - Extension: extension.md
   - Known limitations: limitations.md
